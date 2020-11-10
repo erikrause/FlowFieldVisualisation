@@ -113,7 +113,7 @@ UStaticMeshComponent* ASensorStaticMeshActor::CreateSensorMesh(FVector* location
 	//UStaticMeshComponent* sensorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh %i"), number);
 	UStaticMeshComponent* sensorMesh = CreateDefaultSubobject<UStaticMeshComponent>(*FString("Mesh" + FString::FromInt(number)));
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereVisualAsset(TEXT("/Game/StarterContent/Shapes/Shape_Sphere.Shape_Sphere"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereVisualAsset(TEXT("/Game/StarterContent/Shapes/Shape_Sphere.Shape_Sphere"));	// TODO: убрать ссылку через строку.
 
 	//if (SphereVisualAsset.Succeeded())
 	sensorMesh->SetStaticMesh(SphereVisualAsset.Object);
