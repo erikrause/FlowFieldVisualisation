@@ -26,7 +26,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Calculation")
 		double StartTime;
 	UPROPERTY(EditAnywhere, Category = "Calculation")
-		int Scale;	// Масштаб по осям
+		FVector Scale;	// Масштаб по осям
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
@@ -46,7 +46,7 @@ protected:
 	Calculator* _calculator;
 
 #if WITH_EDITOR
-	virtual void PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent); 
+	virtual void PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent) override; 
 #endif
 
 	bool _isStarted;

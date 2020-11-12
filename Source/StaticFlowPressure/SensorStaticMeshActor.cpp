@@ -12,12 +12,12 @@ ASensorStaticMeshActor::ASensorStaticMeshActor()
 	PrimaryActorTick.bCanEverTick = true;
 	_isStarted = false;
 	
-	Scale = 20;
+	Scale = FVector(13, 13, 13);
 	IsRelativeColor = false;
 
 	SensorsMap = new TMap<FVector, Sensor*>();
 	_calculator = new Test1();
-	TArray<FVector*>* locations = Calculator::CalculateLocations(Scale);
+	TArray<FVector*>* locations = Calculator::CalculateLocations(&Scale);
 
 	int i = 0;
 
@@ -121,16 +121,19 @@ UStaticMeshComponent* ASensorStaticMeshActor::CreateSensorMesh(FVector* location
 	FVector* scaledLocation = ScalarMultiply(*location, 200);
 	sensorMesh->SetRelativeLocation(*scaledLocation);
 
-	double distanse = Calculator::GetDistanceBetweenSensors(Scale) * 200;
-	double radius = (sqrt(pow(distanse, 2) + pow(distanse, 2)) / 2) * 0.25;	// Для сфер.
+	FVector distanse = Calculator::GetDistanceBetweenSensors(&Scale) * 200;
+	//double radius = (sqrt(pow(distanse, 2) + pow(distanse, 2)) / 2) * 0.25;	// Для сфер.
+	double radiusMultipiler = 0.25;
+	double radiusX = (sqrt(pow(distanse.X, 2) + pow(distanse.X, 2)) / 2) * radiusMultipiler;
+	double radiusY = (sqrt(pow(distanse.Y, 2) + pow(distanse.Y, 2)) / 2) * radiusMultipiler;
+	double radiusZ = (sqrt(pow(distanse.Z, 2) + pow(distanse.Z, 2)) / 2) * radiusMultipiler;
+	FVector radius = FVector(radiusX, radiusY, radiusZ);
 	//double radius = (distanse / 2) * 0.25;	// Для куба.
 
 	// Пересчитаем радиус, учитывая что у сферы из StarterContent радиус равен 50:
-	double relativeRadius = radius / 50.0;
-	double epsilonMultipiler = 1.001;
-	relativeRadius *= epsilonMultipiler;
+	FVector meshRadius = radius / 50.0;
 
-	sensorMesh->SetRelativeScale3D(FVector(relativeRadius, relativeRadius, relativeRadius));
+	sensorMesh->SetRelativeScale3D(meshRadius);
 	//sensorMesh->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
 
 	// Оптимизации
