@@ -3,10 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+//#include "Calculation.generated.h"
 
+//UCLASS()
 class STATICFLOWPRESSURE_API Calculator
 {
 public:
+	//GENERATED_BODY()
 	Calculator();
 	~Calculator();
 	static double sigmoid(double x);

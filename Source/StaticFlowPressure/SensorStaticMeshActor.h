@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Calculation.h"
+//#include "StaticFlowFunctionLibrary.h"
 #include "CoreMinimal.h"
 #include "Engine/StaticMeshActor.h"
 #include "SensorStaticMeshActor.generated.h"
@@ -41,6 +42,9 @@ public:
 		double pressure;
 	};
 	TMap<FVector, Sensor*>* SensorsMap;
+
+	//UPROPERTY(EditAnywhere, Category = "Calculation")
+		//UStaticFlowFunctionLibrary* prob;
 
 protected:
 	Calculator* _calculator;
