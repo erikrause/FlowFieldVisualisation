@@ -13,6 +13,7 @@ ASensorsDrawerActor::ASensorsDrawerActor()
 	USceneComponent* SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
 	SetRootComponent(SceneComponent);
 
+	Resolution = FVector(20, 20, 20);
 
 	//static ConstructorHelpers::FObjectFinder<UMaterial> particleSystemAsset(TEXT("/Game/BunnyParticleSystem.BunnyParticleSystem"));
 
@@ -50,7 +51,8 @@ void ASensorsDrawerActor::Tick(float DeltaTime)
 	{
 		if (_isTickStarted)
 		{
-			auto location = ParticleSystem->GetRelativeLocation();
+			//auto location = ParticleSystem->GetRelativeLocation();
+			FVector location = FVector(Resolution.X + Resolution.Y + Resolution.Z, 0, 0);
 			ParticleSystem->SetRelativeLocation(location);
 
 			_isEmitterMoved = true;

@@ -16,7 +16,10 @@ public:
 	ASensorsDrawerActor();
 
 	UPROPERTY(EditAnywhere);
-	UParticleSystemComponent* ParticleSystem;
+		UParticleSystemComponent* ParticleSystem;
+
+	UPROPERTY(EditAnywhere, Category = "Calculation")
+		FVector Resolution;	// Масштаб по осям
 
 protected:
 	// Called when the game starts or when spawned
