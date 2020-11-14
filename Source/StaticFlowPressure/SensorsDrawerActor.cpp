@@ -1,5 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
+PRAGMA_DISABLE_OPTIMIZATION
 
 #include "SensorsDrawerActor.h"
 #include "Particles/ParticleSystemComponent.h"
@@ -52,7 +52,7 @@ void ASensorsDrawerActor::Tick(float DeltaTime)
 		if (_isTickStarted)
 		{
 			//auto location = ParticleSystem->GetRelativeLocation();
-			FVector location = FVector(Resolution.X + Resolution.Y + Resolution.Z, 0, 0);
+			FVector location = FVector(Resolution.X * Resolution.Y * Resolution.Z, 0, 0);
 			ParticleSystem->SetRelativeLocation(location);
 
 			_isEmitterMoved = true;

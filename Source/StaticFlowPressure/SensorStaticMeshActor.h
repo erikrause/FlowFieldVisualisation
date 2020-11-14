@@ -21,8 +21,17 @@ public:
 	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "StaticSensor")
 	//UStaticMeshComponent* VisualMesh;
 
-	UPROPERTY(EditAnywhere, Category = "Visualisation")
+	UPROPERTY(EditAnywhere, Category = "Calculation")
 		bool IsRelativeColor;
+
+	UPROPERTY(EditAnywhere, Category = "Calculation")
+		UStaticMesh* BaseMesh;
+	// DEBUG:
+	UPROPERTY(EditAnywhere, Category = "Calculation")
+		UInstancedStaticMeshComponent* InstancedMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Calculation")
+		UMaterialInstance* MaterialInstance;
 
 	UPROPERTY(EditAnywhere, Category = "Calculation")
 		double StartTime;

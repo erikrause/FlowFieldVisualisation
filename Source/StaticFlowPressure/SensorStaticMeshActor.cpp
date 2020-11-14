@@ -9,6 +9,19 @@ PRAGMA_DISABLE_OPTIMIZATION
 
 ASensorStaticMeshActor::ASensorStaticMeshActor()
 {
+	BaseMesh = CreateDefaultSubobject<UStaticMesh>(*FString("BaseMesh"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereVisualAsset(TEXT("/Game/StarterContent/Shapes/Shape_Sphere.Shape_Sphere"));	// TODO: убрать ссылку через строку.
+	//if (SphereVisualAsset.Succeeded())
+	BaseMesh = SphereVisualAsset.Object;
+	//BaseMesh->AttachTo(RootComponent);
+
+	InstancedMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*FString("InstancedMesh"));
+	InstancedMesh->SetStaticMesh(BaseMesh);
+	InstancedMesh->AttachTo(RootComponent);
+	auto transform = FTransform();
+	InstancedMesh->AddInstance(transform);
+
+
 	PrimaryActorTick.bCanEverTick = true;
 	_isStarted = false;
 	
@@ -20,7 +33,7 @@ ASensorStaticMeshActor::ASensorStaticMeshActor()
 	TArray<FVector*>* locations = Calculator::CalculateLocations(&Scale);
 
 	int i = 0;
-
+	/*
 	for (FVector* location : *locations)
 	{
 		UStaticMeshComponent* sensorMesh = CreateSensorMesh(location, i);
@@ -43,7 +56,7 @@ ASensorStaticMeshActor::ASensorStaticMeshActor()
 		sensor->Mesh = sensorMesh;
 		SensorsMap->Add(*location, sensor);
 		i++;
-	}
+	}*/
 
 	StartTime = 0.0;
 	_secondsCounter = StartTime;
@@ -110,13 +123,17 @@ void ASensorStaticMeshActor::_updateSensors()
 
 UStaticMeshComponent* ASensorStaticMeshActor::CreateSensorMesh(FVector* location, int number)
 {
-	//UStaticMeshComponent* sensorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh %i"), number);
-	UStaticMeshComponent* sensorMesh = CreateDefaultSubobject<UStaticMeshComponent>(*FString("Mesh" + FString::FromInt(number)));
+	UInstancedStaticMeshComponent* sensorMesh = NewObject<UInstancedStaticMeshComponent>();
+	sensorMesh->RegisterComponent();
+	sensorMesh->SetStaticMesh(BaseMesh);
+	//sensorMesh->SetFlags(RF_Transactional);
+	AddInstanceComponent(sensorMesh);
+	sensorMesh->AttachTo(RootComponent);
 
+	/*UStaticMeshComponent* sensorMesh = CreateDefaultSubobject<UStaticMeshComponent>(*FString("Mesh" + FString::FromInt(number)));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereVisualAsset(TEXT("/Game/StarterContent/Shapes/Shape_Sphere.Shape_Sphere"));	// TODO: убрать ссылку через строку.
-
 	//if (SphereVisualAsset.Succeeded())
-	sensorMesh->SetStaticMesh(SphereVisualAsset.Object);
+	sensorMesh->SetStaticMesh(SphereVisualAsset.Object);*/
 
 	FVector* scaledLocation = ScalarMultiply(*location, 200);
 	sensorMesh->SetRelativeLocation(*scaledLocation);
