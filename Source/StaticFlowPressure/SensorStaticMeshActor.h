@@ -26,12 +26,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Calculation")
 		UStaticMesh* BaseMesh;
-	// DEBUG:
-	UPROPERTY(EditAnywhere, Category = "Calculation")
-		UInstancedStaticMeshComponent* InstancedMesh;
 
-	UPROPERTY(EditAnywhere, Category = "Calculation")
-		UMaterialInstance* MaterialInstance;
+	//UPROPERTY(EditAnywhere, Category = "Calculation")
+	UInstancedStaticMeshComponent* InstancedMesh;
+
+	//TODO: UPROPERTY(EditAnywhere, Category = "Calculation")
+	//	UMaterialInstance* BaseMaterial;
 
 	UPROPERTY(EditAnywhere, Category = "Calculation")
 		double StartTime;
@@ -46,7 +46,7 @@ public:
 
 	struct Sensor
 	{
-		UStaticMeshComponent* Mesh;
+		UInstancedStaticMeshComponent* Mesh;
 		UMaterialInstanceDynamic* Material;
 		double pressure;
 	};
@@ -66,7 +66,8 @@ protected:
 
 	void _updateSensors();
 
-	UStaticMeshComponent* CreateSensorMesh(FVector* location, int number);
+	int CreateSensorInstancedMesh(FVector* location);
+	//UInstancedStaticMeshComponent* CreateSensorMesh(FVector* location, int number);
 	FVector* ScalarMultiply(FVector vector, float multipiler);
 	double _secondsCounter;
 

@@ -10,40 +10,43 @@ PRAGMA_DISABLE_OPTIMIZATION
 ASensorStaticMeshActor::ASensorStaticMeshActor()
 {
 	BaseMesh = CreateDefaultSubobject<UStaticMesh>(*FString("BaseMesh"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereVisualAsset(TEXT("/Game/StarterContent/Shapes/Shape_Sphere.Shape_Sphere"));	// TODO: убрать ссылку через строку.
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereVisualAsset(TEXT("/Game/Arrow.Arrow"));	// TODO: убрать ссылку через строку.
 	//if (SphereVisualAsset.Succeeded())
 	BaseMesh = SphereVisualAsset.Object;
-	//BaseMesh->AttachTo(RootComponent);
+
+	static ConstructorHelpers::FObjectFinder<UMaterial> materialAsset(TEXT("/Game/ColorMaterial.ColorMaterial"));
+	auto material = materialAsset.Object;
+	BaseMesh->SetMaterial(0, material);
 
 	InstancedMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*FString("InstancedMesh"));
 	InstancedMesh->SetStaticMesh(BaseMesh);
-	InstancedMesh->AttachTo(RootComponent);
-	auto transform = FTransform();
-	InstancedMesh->AddInstance(transform);
 
+	// Оптимизации
+	InstancedMesh->SetCollisionProfileName(FName("NoCollision"), false);
+	InstancedMesh->SetCastShadow(false);
+	InstancedMesh->SetLightAttachmentsAsGroup(true);
+
+	//InstancedMesh->SetMaterial(0, material);
+	InstancedMesh->AttachTo(RootComponent);
 
 	PrimaryActorTick.bCanEverTick = true;
 	_isStarted = false;
 	
-	Scale = FVector(13, 13, 13);
+	Scale = FVector(40, 40, 40);
 	IsRelativeColor = false;
 
 	SensorsMap = new TMap<FVector, Sensor*>();
 	_calculator = new Test1();
 	TArray<FVector*>* locations = Calculator::CalculateLocations(&Scale);
 
-	int i = 0;
-	/*
 	for (FVector* location : *locations)
 	{
-		UStaticMeshComponent* sensorMesh = CreateSensorMesh(location, i);
+		int sensorMeshId = CreateSensorInstancedMesh(location);
 
 		// Создание динамического материала.
-		static ConstructorHelpers::FObjectFinder<UMaterial> materialAsset(TEXT("Material'/Game/ColorMaterial.ColorMaterial'"));		//sensor->GetMaterial(0);
-		auto material = materialAsset.Object;
 		//auto dynamicMaterial = UMaterialInstanceDynamic::Create(material, NULL);	// Outer is old material?
 		//sensorMesh->SetMaterial(0, dynamicMaterial);
-		auto dynamicMaterial = sensorMesh->CreateDynamicMaterialInstance(0, material);
+		/*auto dynamicMaterial = sensorMesh->CreateDynamicMaterialInstance(0, material);
 		
 		// Вычисление начального цвета.
 		double pressure = _calculator->calc_pres(5.0, location->X, location->Y, location->Z);
@@ -54,10 +57,9 @@ ASensorStaticMeshActor::ASensorStaticMeshActor()
 		Sensor* sensor = new Sensor();
 		sensor->Material = dynamicMaterial;
 		sensor->Mesh = sensorMesh;
-		SensorsMap->Add(*location, sensor);
-		i++;
-	}*/
-
+		SensorsMap->Add(*location, sensor);*/
+	}
+	
 	StartTime = 0.0;
 	_secondsCounter = StartTime;
 	_updateSensors();
@@ -121,19 +123,42 @@ void ASensorStaticMeshActor::_updateSensors()
 	}
 }
 
-UStaticMeshComponent* ASensorStaticMeshActor::CreateSensorMesh(FVector* location, int number)
+int ASensorStaticMeshActor::CreateSensorInstancedMesh(FVector* location)
 {
-	UInstancedStaticMeshComponent* sensorMesh = NewObject<UInstancedStaticMeshComponent>();
-	sensorMesh->RegisterComponent();
+	double multipiler = 200;
+	auto rotation = FRotator(0, 0, 0);
+	FVector* scaledLocation = ScalarMultiply(*location, multipiler);
+
+	/* Расчет радиуса меша */
+	FVector distanse = Calculator::GetDistanceBetweenSensors(&Scale) * multipiler;
+	//double radius = (sqrt(pow(distanse, 2) + pow(distanse, 2)) / 2) * 0.25;	// Для сфер.
+	double radiusMultipiler = 0.25;
+	double radiusX = (sqrt(pow(distanse.X, 2) + pow(distanse.X, 2)) / 2) * radiusMultipiler;
+	double radiusY = (sqrt(pow(distanse.Y, 2) + pow(distanse.Y, 2)) / 2) * radiusMultipiler;
+	double radiusZ = (sqrt(pow(distanse.Z, 2) + pow(distanse.Z, 2)) / 2) * radiusMultipiler;
+	FVector radius = FVector(radiusX, radiusY, radiusZ);
+	// Пересчитаем радиус, учитывая что у сферы из StarterContent радиус равен 50:
+	FVector meshRadius = radius / 50.0;
+
+	auto transform = FTransform(rotation, *scaledLocation, meshRadius);
+	return InstancedMesh->AddInstance(transform);
+}
+
+/*
+UInstancedStaticMeshComponent* ASensorStaticMeshActor::CreateSensorMesh(FVector* location, int number)
+{
+	//UInstancedStaticMeshComponent* sensorMesh = NewObject<UInstancedStaticMeshComponent>();
+	UInstancedStaticMeshComponent* sensorMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*FString("Mesh" + FString::FromInt(number)));
+	//sensorMesh->RegisterComponent();
 	sensorMesh->SetStaticMesh(BaseMesh);
 	//sensorMesh->SetFlags(RF_Transactional);
-	AddInstanceComponent(sensorMesh);
+	//AddInstanceComponent(sensorMesh);
 	sensorMesh->AttachTo(RootComponent);
 
 	/*UStaticMeshComponent* sensorMesh = CreateDefaultSubobject<UStaticMeshComponent>(*FString("Mesh" + FString::FromInt(number)));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereVisualAsset(TEXT("/Game/StarterContent/Shapes/Shape_Sphere.Shape_Sphere"));	// TODO: убрать ссылку через строку.
 	//if (SphereVisualAsset.Succeeded())
-	sensorMesh->SetStaticMesh(SphereVisualAsset.Object);*/
+	sensorMesh->SetStaticMesh(SphereVisualAsset.Object);*//*
 
 	FVector* scaledLocation = ScalarMultiply(*location, 200);
 	sensorMesh->SetRelativeLocation(*scaledLocation);
@@ -151,7 +176,6 @@ UStaticMeshComponent* ASensorStaticMeshActor::CreateSensorMesh(FVector* location
 	FVector meshRadius = radius / 50.0;
 
 	sensorMesh->SetRelativeScale3D(meshRadius);
-	//sensorMesh->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.15f));
 
 	// Оптимизации
 	sensorMesh->SetCollisionProfileName(FName("NoCollision"), false);
@@ -161,7 +185,7 @@ UStaticMeshComponent* ASensorStaticMeshActor::CreateSensorMesh(FVector* location
 	sensorMesh->AttachTo(RootComponent);
 	
 	return sensorMesh;
-}
+}*/
 
 FVector* ASensorStaticMeshActor::ScalarMultiply(FVector vector, float multipiler)
 {
