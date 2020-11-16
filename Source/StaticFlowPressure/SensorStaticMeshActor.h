@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Calculation.h"
+//#include "StaticFlowFunctionLibrary.h"
 #include "CoreMinimal.h"
 #include "Engine/StaticMeshActor.h"
 #include "SensorStaticMeshActor.generated.h"
@@ -20,13 +21,22 @@ public:
 	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "StaticSensor")
 	//UStaticMeshComponent* VisualMesh;
 
-	UPROPERTY(EditAnywhere, Category = "Visualisation")
+	UPROPERTY(EditAnywhere, Category = "Calculation")
 		bool IsRelativeColor;
+
+	UPROPERTY(EditAnywhere, Category = "Calculation")
+		UStaticMesh* BaseMesh;
+
+	//UPROPERTY(EditAnywhere, Category = "Calculation")
+	UInstancedStaticMeshComponent* InstancedMesh;
+
+	//TODO: UPROPERTY(EditAnywhere, Category = "Calculation")
+	//	UMaterialInstance* BaseMaterial;
 
 	UPROPERTY(EditAnywhere, Category = "Calculation")
 		double StartTime;
 	UPROPERTY(EditAnywhere, Category = "Calculation")
-		int Scale;	// Масштаб по осям
+		FVector Scale;	// Масштаб по осям
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
@@ -36,24 +46,28 @@ public:
 
 	struct Sensor
 	{
-		UStaticMeshComponent* Mesh;
+		UInstancedStaticMeshComponent* Mesh;
 		UMaterialInstanceDynamic* Material;
 		double pressure;
 	};
 	TMap<FVector, Sensor*>* SensorsMap;
 
+	//UPROPERTY(EditAnywhere, Category = "Calculation")
+		//UStaticFlowFunctionLibrary* prob;
+
 protected:
 	Calculator* _calculator;
 
 #if WITH_EDITOR
-	virtual void PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent); 
+	virtual void PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent) override; 
 #endif
 
 	bool _isStarted;
 
 	void _updateSensors();
 
-	UStaticMeshComponent* CreateSensorMesh(FVector* location, int number);
+	int CreateSensorInstancedMesh(FVector* location);
+	//UInstancedStaticMeshComponent* CreateSensorMesh(FVector* location, int number);
 	FVector* ScalarMultiply(FVector vector, float multipiler);
 	double _secondsCounter;
 

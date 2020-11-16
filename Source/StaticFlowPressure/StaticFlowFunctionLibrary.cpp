@@ -9,10 +9,10 @@ UStaticFlowFunctionLibrary::UStaticFlowFunctionLibrary()
 {
 }
 
-TMap<FVector, ASensorStaticMeshActor*>  UStaticFlowFunctionLibrary::CreateSensors(UObject* WorldContextObject, int scale)
+TMap<FVector, ASensorStaticMeshActor*>  UStaticFlowFunctionLibrary::CreateSensors(UObject* WorldContextObject, FVector& scale)
 {
 	TMap<FVector, ASensorStaticMeshActor*> sensorsMap = TMap<FVector, ASensorStaticMeshActor*>();
-	TArray<FVector*>* locations = Calculator::CalculateLocations(scale);
+	TArray<FVector*>* locations = Calculator::CalculateLocations(&scale);
 	UWorld* world = WorldContextObject->GetWorld();
 
 	for (FVector* location : *locations)
