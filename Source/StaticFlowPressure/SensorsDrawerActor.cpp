@@ -30,6 +30,7 @@ void ASensorsDrawerActor::BeginPlay()
 	
 }
 
+#if WITH_EDITOR
 void ASensorsDrawerActor::PostEditChangeProperty(FPropertyChangedEvent& e)
 {
 	Super::PostEditChangeProperty(e);
@@ -41,6 +42,7 @@ void ASensorsDrawerActor::PostEditChangeProperty(FPropertyChangedEvent& e)
 		ParticleSystem->AttachTo(RootComponent);
 	}
 }
+#endif
 
 // Called every frame
 void ASensorsDrawerActor::Tick(float DeltaTime)
