@@ -14,8 +14,8 @@ Test1::~Test1()
 double Test1::calc_vel(double time, double x, double y, double z, int coor)
 {
     std::map<int, std::function<double()>> coorMap;
-    coorMap[0] = [&]() { return exp(-epsilon * lyambda * time) * sin(sqrt(lyambda) * y); };
-    coorMap[1] = [&]() { return exp(-epsilon * lyambda * time) * sin(sqrt(lyambda) * x); };
+    coorMap[0] = [&]() { return exp(-epsilon * time) * cos(y); };
+    coorMap[1] = [&]() { return -exp(-epsilon * time) * cos(x); };
     
     return coorMap[coor]();
 }
