@@ -14,6 +14,7 @@ ASensorStaticMeshActor::ASensorStaticMeshActor()
 	//if (SphereVisualAsset.Succeeded())
 	BaseMesh = SphereVisualAsset.Object;
 
+
 	static ConstructorHelpers::FObjectFinder<UMaterial> materialAsset(TEXT("/Game/SensorMaterial.SensorMaterial"));
 	auto material = materialAsset.Object;
 	//BaseMesh->SetMaterial(0, material);		// Error C2039 when packaging the progect.
@@ -26,6 +27,7 @@ ASensorStaticMeshActor::ASensorStaticMeshActor()
 	InstancedMesh->SetCollisionProfileName(FName("NoCollision"), false);
 	InstancedMesh->SetCastShadow(false);
 	InstancedMesh->SetLightAttachmentsAsGroup(true);
+	InstancedMesh->SetRenderCustomDepth(true);		// Для outline'ов	TODO: не работает! отладить!
 
 	//InstancedMesh->SetMaterial(0, material);
 	InstancedMesh->AttachTo(RootComponent);
