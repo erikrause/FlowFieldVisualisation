@@ -135,7 +135,7 @@ int ASensorStaticMeshActor::CreateSensorInstancedMesh(FVector* location)
 	/* Расчет радиуса меша */
 	FVector distanse = Calculator::GetDistanceBetweenSensors(&Scale) * multipiler;
 	//double radius = (sqrt(pow(distanse, 2) + pow(distanse, 2)) / 2) * 0.25;	// Для сфер.
-	double radiusMultipiler = 0.25;
+	double radiusMultipiler = 0.5;
 	double radiusX = (sqrt(pow(distanse.X, 2) + pow(distanse.X, 2)) / 2) * radiusMultipiler;
 	double radiusY = (sqrt(pow(distanse.Y, 2) + pow(distanse.Y, 2)) / 2) * radiusMultipiler;
 	double radiusZ = (sqrt(pow(distanse.Z, 2) + pow(distanse.Z, 2)) / 2) * radiusMultipiler;
