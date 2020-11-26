@@ -21,8 +21,8 @@ public:
 	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "StaticSensor")
 	//UStaticMeshComponent* VisualMesh;
 
-	UPROPERTY(EditAnywhere, Category = "Calculation")
-		bool IsRelativeColor;
+	/*UPROPERTY(EditAnywhere, Category = "Calculation")
+		bool IsRelativeColor;*/
 
 	UPROPERTY(EditAnywhere, Category = "Calculation")
 		UStaticMesh* BaseMesh;
@@ -33,10 +33,13 @@ public:
 	//TODO: UPROPERTY(EditAnywhere, Category = "Calculation")
 	//	UMaterialInstance* BaseMaterial;
 
+	//UPROPERTY(EditAnywhere, Category = "Calculation")
+		//double StartTime;
 	UPROPERTY(EditAnywhere, Category = "Calculation")
-		double StartTime;
+		FVector Resolution = FVector(5, 5, 5);	// Масштаб по осям
+
 	UPROPERTY(EditAnywhere, Category = "Calculation")
-		FVector Scale;	// Масштаб по осям
+		float SensorMeshRadiusMultipiler = 0.25;	// размер сенсоров
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
@@ -44,33 +47,31 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Events")
 		void OnButtonPressed();
 
-	struct Sensor
-	{
-		UInstancedStaticMeshComponent* Mesh;
-		UMaterialInstanceDynamic* Material;
-		double pressure;
-	};
-	TMap<FVector, Sensor*>* SensorsMap;
-
 	//UPROPERTY(EditAnywhere, Category = "Calculation")
 		//UStaticFlowFunctionLibrary* prob;
 
 protected:
-	Calculator* _calculator;
+
+	// Нужно ли проверить на WITH_EDITOR?
+	virtual void PostLoad() override;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent) override; 
 #endif
 
-	bool _isStarted;
+	//void _updateSensors();
 
-	void _updateSensors();
+	void _init();
+
+	void _createField();
+
+	void _removeField();
 
 	int CreateSensorInstancedMesh(FVector* location);
-	//UInstancedStaticMeshComponent* CreateSensorMesh(FVector* location, int number);
-	FVector* ScalarMultiply(FVector vector, float multipiler);
-	double _secondsCounter;
 
-	void _setAbsoluteColor();
-	void _setRelativeColor();
+	FVector* ScalarMultiply(FVector vector, float multipiler);
+	//double _secondsCounter;
+
+	//void _setAbsoluteColor();
+	//void _setRelativeColor();
 };
