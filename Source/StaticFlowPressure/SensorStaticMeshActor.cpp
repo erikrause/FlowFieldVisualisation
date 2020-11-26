@@ -15,7 +15,7 @@ ASensorStaticMeshActor::ASensorStaticMeshActor()
 	BaseMesh = SphereVisualAsset.Object;
 
 
-	static ConstructorHelpers::FObjectFinder<UMaterial> materialAsset(TEXT("/Game/SensorMaterial.SensorMaterial"));
+	static ConstructorHelpers::FObjectFinder<UMaterial> materialAsset(TEXT("/Game/SensorMaterial_Inst.SensorMaterial_Inst"));
 	auto material = materialAsset.Object;
 	//BaseMesh->SetMaterial(0, material);		// Error C2039 when packaging the progect.
 	BaseMesh->AddMaterial(material);
