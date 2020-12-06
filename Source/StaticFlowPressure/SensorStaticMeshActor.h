@@ -35,11 +35,17 @@ public:
 
 	//UPROPERTY(EditAnywhere, Category = "Calculation")
 		//double StartTime;
-	UPROPERTY(EditAnywhere, Category = "Calculation")
-		FVector Resolution = FVector(5, 5, 5);	// Масштаб по осям
+	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Resolution (number of sensors by axis)")
+		FVector Resolution = FVector(40, 40, 40);
 
-	UPROPERTY(EditAnywhere, Category = "Calculation")
-		float SensorMeshRadiusMultipiler = 0.25;	// размер сенсоров
+	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Vectors size (multipiler)")
+		float SensorMeshRadiusMultipiler = 0.25;
+
+	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Show vector field")
+		bool IsShowVectors = true;
+
+	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Vector field size (multipiler)")
+		float SizeMultipiler = 200;
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
@@ -61,15 +67,13 @@ protected:
 
 	//void _updateSensors();
 
-	void _init();
-
 	void _createField();
 
 	void _removeField();
 
-	int CreateSensorInstancedMesh(FVector* location);
+	int _createSensorInstancedMesh(FVector* location);
 
-	FVector* ScalarMultiply(FVector vector, float multipiler);
+	FVector* _scalarMultiply(FVector vector, float multipiler);
 	//double _secondsCounter;
 
 	//void _setAbsoluteColor();

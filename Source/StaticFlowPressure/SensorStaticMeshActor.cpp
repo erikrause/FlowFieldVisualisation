@@ -9,41 +9,81 @@ PRAGMA_DISABLE_OPTIMIZATION
 
 ASensorStaticMeshActor::ASensorStaticMeshActor()
 {	
+	InstancedMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*FString("InstancedMesh"));
+	//InstancedMesh = NewObject<UInstancedStaticMeshComponent>();
+
+	// Оптимизации
+	InstancedMesh->SetCollisionProfileName(FName("NoCollision"), false);
+	InstancedMesh->SetCastShadow(false);
+	InstancedMesh->SetLightAttachmentsAsGroup(true);
+	InstancedMesh->SetRenderCustomDepth(true);
+
+	InstancedMesh->AttachTo(RootComponent);
+	//PrimaryActorTick.bCanEverTick = true;
 	/*
 	StartTime = 0.0;
 	_secondsCounter = StartTime;
 	_updateSensors();*/
 }
 
-void ASensorStaticMeshActor::_init()
+#if WITH_EDITOR
+
+void ASensorStaticMeshActor::PostLoad()
 {
-	if (BaseMesh == NULL)
+	Super::PostLoad();
+	
+	if (BaseMesh != NULL) 
 	{
-		BaseMesh = CreateDefaultSubobject<UStaticMesh>(*FString("BaseMesh"));
-		static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereVisualAsset(TEXT("/Game/Arrow.Arrow"));	// TODO: убрать ссылку через строку.
-		//if (SphereVisualAsset.Succeeded())
-		BaseMesh = SphereVisualAsset.Object;
-
-		//static ConstructorHelpers::FObjectFinder<UMaterial> materialAsset(TEXT("/Game/SensorMaterial.SensorMaterial"));
-		//auto material = materialAsset.Object;
-		////BaseMesh->SetMaterial(0, material);		// Error C2039 when packaging the progect.
-		//BaseMesh->AddMaterial(material);
-
-		InstancedMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*FString("InstancedMesh"));
 		InstancedMesh->SetStaticMesh(BaseMesh);
+	}
+	_createField();
+}
 
-		// Оптимизации
-		InstancedMesh->SetCollisionProfileName(FName("NoCollision"), false);
-		InstancedMesh->SetCastShadow(false);
-		InstancedMesh->SetLightAttachmentsAsGroup(true);
-		InstancedMesh->SetRenderCustomDepth(true);		// Для outline'ов	TODO: не работает! отладить!
+void ASensorStaticMeshActor::PostEditChangeProperty(FPropertyChangedEvent& e)
+{
+	Super::PostEditChangeProperty(e);
 
-		//InstancedMesh->SetMaterial(0, material);
-		InstancedMesh->AttachTo(RootComponent);
+	FName PropertyName = (e.Property != NULL) ? e.MemberProperty->GetFName() : NAME_None;
+
+	if ((PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, Resolution)) ||
+		(PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, SensorMeshRadiusMultipiler)))
+	{
+		_removeField();
+		_createField();
+	}
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, BaseMesh))
+	{
+		InstancedMesh->SetStaticMesh(BaseMesh);
+		_removeField();
+		_createField();
+	}
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, IsShowVectors))
+	{
+		if (IsShowVectors == true) 
+		{
+			_createField();
+		}
+		else
+		{
+			_removeField();
+		}
 	}
 
-	PrimaryActorTick.bCanEverTick = true;
+	/*
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, StartTime))
+	{
+		_secondsCounter = StartTime;
+		_updateSensors();
+	}
+
+
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, IsRelativeColor))
+	{
+		_updateSensors();
+	}*/
+
 }
+#endif
 
 void ASensorStaticMeshActor::_createField()
 {
@@ -51,27 +91,27 @@ void ASensorStaticMeshActor::_createField()
 
 	for (FVector* location : *locations)
 	{
-		CreateSensorInstancedMesh(location);
+		_createSensorInstancedMesh(location);
 	}
 }
 
 void ASensorStaticMeshActor::_removeField()
 {
 	int instanceCount = InstancedMesh->GetInstanceCount();
-	for (int i = 0; i < instanceCount; i++)
+
+	for (int i = instanceCount; i > 0; i--)	// нужно удалять с конца
 	{
-		InstancedMesh->RemoveInstance(i);
+		InstancedMesh->RemoveInstance(i - 1);
 	}
 }
 
-int ASensorStaticMeshActor::CreateSensorInstancedMesh(FVector* location)
+int ASensorStaticMeshActor::_createSensorInstancedMesh(FVector* location)
 {
-	double multipiler = 200;
 	auto rotation = FRotator(0, 0, 0);
-	FVector* scaledLocation = ScalarMultiply(*location, multipiler);
+	FVector* scaledLocation = _scalarMultiply(*location, SizeMultipiler);
 
 	/* Расчет радиуса меша */
-	FVector distanse = Calculator::GetDistanceBetweenSensors(&Resolution) * multipiler;
+	FVector distanse = Calculator::GetDistanceBetweenSensors(&Resolution) * SizeMultipiler;
 	//double radius = (sqrt(pow(distanse, 2) + pow(distanse, 2)) / 2) * 0.25;	// Для сфер.
 	//double radiusMultipiler = 0.5;
 	double radiusX = (sqrt(pow(distanse.X, 2) + pow(distanse.X, 2)) / 2) * SensorMeshRadiusMultipiler;
@@ -85,7 +125,7 @@ int ASensorStaticMeshActor::CreateSensorInstancedMesh(FVector* location)
 	return InstancedMesh->AddInstance(transform);
 }
 
-FVector* ASensorStaticMeshActor::ScalarMultiply(FVector vector, float multipiler)
+FVector* ASensorStaticMeshActor::_scalarMultiply(FVector vector, float multipiler)
 {
 	vector.X *= multipiler;
 	vector.Y *= multipiler;
@@ -119,47 +159,6 @@ void ASensorStaticMeshActor::OnButtonPressed()
 	//_isStarted = true;
 }
 
-#if WITH_EDITOR
-
-void ASensorStaticMeshActor::PostLoad()
-{
-	Super::PostLoad();
-
-	_init();
-	_createField();
-}
-void ASensorStaticMeshActor::PostEditChangeProperty(FPropertyChangedEvent& e)
-{
-	Super::PostEditChangeProperty(e);
-
-	FName PropertyName = (e.Property != NULL) ? e.Property->GetFName() : NAME_None;
-
-	if ((PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, Resolution)) || 
-		(PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, SensorMeshRadiusMultipiler)))
-	{
-		_removeField();
-		_createField();
-	}
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, BaseMesh))
-	{
-		InstancedMesh->SetStaticMesh(BaseMesh);
-	}
-
-	/*
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, StartTime))
-	{
-		_secondsCounter = StartTime;
-		_updateSensors();
-	}
-
-	
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, IsRelativeColor))
-	{
-		_updateSensors();
-	}*/
-
-}
-#endif
 /*
 void ASensorStaticMeshActor::_updateSensors()
 {
