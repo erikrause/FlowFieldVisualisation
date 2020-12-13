@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Calculation.h"
-//#include "StaticFlowFunctionLibrary.h"
+#include "Components/SplineComponent.h"
 #include "CoreMinimal.h"
 #include "Engine/StaticMeshActor.h"
 #include "SensorStaticMeshActor.generated.h"
@@ -18,23 +18,13 @@ class STATICFLOWPRESSURE_API ASensorStaticMeshActor : public AStaticMeshActor
 	
 public:
 	ASensorStaticMeshActor();
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "StaticSensor")
-	//UStaticMeshComponent* VisualMesh;
-
-	/*UPROPERTY(EditAnywhere, Category = "Calculation")
-		bool IsRelativeColor;*/
 
 	UPROPERTY(EditAnywhere, Category = "Calculation")
-		UStaticMesh* BaseMesh;
+		UStaticMesh* VectorMesh;
 
-	//UPROPERTY(EditAnywhere, Category = "Calculation")
 	UInstancedStaticMeshComponent* InstancedMesh;
+	USplineComponent* SplineComponent;
 
-	//TODO: UPROPERTY(EditAnywhere, Category = "Calculation")
-	//	UMaterialInstance* BaseMaterial;
-
-	//UPROPERTY(EditAnywhere, Category = "Calculation")
-		//double StartTime;
 	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Resolution (number of sensors by axis)")
 		FVector Resolution = FVector(40, 40, 40);
 
@@ -53,19 +43,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Events")
 		void OnButtonPressed();
 
-	//UPROPERTY(EditAnywhere, Category = "Calculation")
-		//UStaticFlowFunctionLibrary* prob;
+	void OnConstruction(const FTransform& transform) override;
 
 protected:
 
 	// Нужно ли проверить на WITH_EDITOR?
-	virtual void PostLoad() override;
+	//virtual void PostLoad() override;
 
 #if WITH_EDITOR
-	virtual void PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent) override; 
+	virtual void PostEditChangeProperty(FPropertyChangedEvent & propertyChangedEvent) override; 
 #endif
-
-	//void _updateSensors();
 
 	void _createField();
 
@@ -73,9 +60,5 @@ protected:
 
 	int _createSensorInstancedMesh(FVector* location);
 
-	FVector* _scalarMultiply(FVector vector, float multipiler);
-	//double _secondsCounter;
-
-	//void _setAbsoluteColor();
-	//void _setRelativeColor();
+	FVector* _scalarMultiply(FVector* vector, float multipiler);
 };

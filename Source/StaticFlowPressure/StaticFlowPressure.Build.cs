@@ -8,7 +8,7 @@ public class StaticFlowPressure : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "RenderCore" });  // добавил "RenderCore"  для Material.cpp
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });  // добавил "RenderCore"  для Material.cpp
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

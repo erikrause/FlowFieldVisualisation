@@ -26,63 +26,37 @@ ASensorStaticMeshActor::ASensorStaticMeshActor()
 	_updateSensors();*/
 }
 
-#if WITH_EDITOR
-
-void ASensorStaticMeshActor::PostLoad()
+void ASensorStaticMeshActor::OnConstruction(const FTransform& transform)
 {
-	Super::PostLoad();
-	
-	if (BaseMesh != NULL) 
+	Super::OnConstruction(transform);
+
+	if (VectorMesh != NULL)
 	{
-		InstancedMesh->SetStaticMesh(BaseMesh);
+		InstancedMesh->SetStaticMesh(VectorMesh);
+
+		_removeField();
+		if (IsShowVectors == true)
+		{
+			_createField();
+		}
 	}
-	_createField();
 }
 
+#if WITH_EDITOR
 void ASensorStaticMeshActor::PostEditChangeProperty(FPropertyChangedEvent& e)
 {
 	Super::PostEditChangeProperty(e);
 
 	FName PropertyName = (e.Property != NULL) ? e.MemberProperty->GetFName() : NAME_None;
 
-	if ((PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, Resolution)) ||
-		(PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, SensorMeshRadiusMultipiler)))
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, VectorMesh))
 	{
-		_removeField();
-		_createField();
+		InstancedMesh->SetStaticMesh(VectorMesh);
+		//_removeField();
+		//_createField();
 	}
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, BaseMesh))
-	{
-		InstancedMesh->SetStaticMesh(BaseMesh);
-		_removeField();
-		_createField();
-	}
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, IsShowVectors))
-	{
-		if (IsShowVectors == true) 
-		{
-			_createField();
-		}
-		else
-		{
-			_removeField();
-		}
-	}
-
-	/*
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, StartTime))
-	{
-		_secondsCounter = StartTime;
-		_updateSensors();
-	}
-
-
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, IsRelativeColor))
-	{
-		_updateSensors();
-	}*/
-
 }
+
 #endif
 
 void ASensorStaticMeshActor::_createField()
@@ -108,7 +82,7 @@ void ASensorStaticMeshActor::_removeField()
 int ASensorStaticMeshActor::_createSensorInstancedMesh(FVector* location)
 {
 	auto rotation = FRotator(0, 0, 0);
-	FVector* scaledLocation = _scalarMultiply(*location, SizeMultipiler);
+	FVector* scaledLocation = _scalarMultiply(location, SizeMultipiler);
 
 	/* Расчет радиуса меша */
 	FVector distanse = Calculator::GetDistanceBetweenSensors(&Resolution) * SizeMultipiler;
@@ -125,13 +99,13 @@ int ASensorStaticMeshActor::_createSensorInstancedMesh(FVector* location)
 	return InstancedMesh->AddInstance(transform);
 }
 
-FVector* ASensorStaticMeshActor::_scalarMultiply(FVector vector, float multipiler)
+FVector* ASensorStaticMeshActor::_scalarMultiply(FVector* vector, float multipiler)
 {
-	vector.X *= multipiler;
-	vector.Y *= multipiler;
-	vector.Z *= multipiler;
+	vector->X *= multipiler;
+	vector->Y *= multipiler;
+	vector->Z *= multipiler;
 
-	return &vector;
+	return vector;
 }
 
 void ASensorStaticMeshActor::BeginPlay()
