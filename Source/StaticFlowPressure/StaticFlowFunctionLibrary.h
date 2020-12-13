@@ -3,7 +3,7 @@
 #pragma once
 
 #include "SensorStaticMeshActor.h"
-#include "StaticSensor.h"
+//#include "StaticSensor.h"
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "StaticFlowFunctionLibrary.generated.h"
