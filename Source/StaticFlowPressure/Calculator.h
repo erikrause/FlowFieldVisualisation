@@ -13,10 +13,10 @@ public:
 	Calculator();
 	~Calculator();
 	static double sigmoid(double x);
-	virtual double calc_vel(double time, double x, double y, double z, int coor) = 0;
-	virtual double calc_pres(double time, double x, double y, double z) = 0;
-	static TArray<FVector*>* CalculateLocations(FVector* scale);
-	static FVector GetDistanceBetweenSensors(FVector* scale);
+	virtual FVector calc_vel(double time, double x, double y, double z) = 0;
+	virtual double calc_pres(double time, double x, double y, double z, FVector vel) = 0;
+	static TArray<FVector> CalculateLocations(FVector scale);
+	static FVector GetDistanceBetweenSensors(FVector scale);
 
 	double epsilon;
 	double lyambda;

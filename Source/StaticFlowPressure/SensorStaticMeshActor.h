@@ -2,22 +2,23 @@
 
 #pragma once
 
-#include "Calculation.h"
+//#include "Calculation.h"
 #include "Components/SplineComponent.h"
 #include "CoreMinimal.h"
-#include "Engine/StaticMeshActor.h"
+//#include "Engine/StaticMeshActor.h"
+#include "GameFramework/Actor.h"
 #include "SensorStaticMeshActor.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class STATICFLOWPRESSURE_API ASensorStaticMeshActor : public AStaticMeshActor
+class STATICFLOWPRESSURE_API AFieldActor : public AActor
 {
 	GENERATED_BODY()
 	
 public:
-	ASensorStaticMeshActor();
+	AFieldActor();
 
 	UPROPERTY(EditAnywhere, Category = "Calculation")
 		UStaticMesh* VectorMesh;
@@ -25,8 +26,11 @@ public:
 	UInstancedStaticMeshComponent* InstancedMesh;
 	USplineComponent* SplineComponent;
 
-	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Resolution (number of sensors by axis)")
-		FVector Resolution = FVector(40, 40, 40);
+	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Vector field resolution (number of sensors by axis)")
+		FVector VectorFieldResolution = FVector(40, 40, 40);
+
+	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Spline resolution (number of splines by axis)")
+		FVector SplineResolution = FVector(20, 20, 1);	// TODO: переделать через плотность.
 
 	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Vectors size (multipiler)")
 		float SensorMeshRadiusMultipiler = 0.25;
@@ -48,7 +52,7 @@ public:
 protected:
 
 	// Ќужно ли проверить на WITH_EDITOR?
-	//virtual void PostLoad() override;
+	virtual void PostLoad() override;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent & propertyChangedEvent) override; 
@@ -58,7 +62,7 @@ protected:
 
 	void _removeField();
 
-	int _createSensorInstancedMesh(FVector* location);
+	int _createSensorInstancedMesh(FVector location);
 
-	FVector* _scalarMultiply(FVector* vector, float multipiler);
+	FVector _scalarMultiply(FVector vector, float multipiler);
 };

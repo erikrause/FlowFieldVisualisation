@@ -3,14 +3,19 @@ PRAGMA_DISABLE_OPTIMIZATION
 
 #include "SensorStaticMeshActor.h"
 //#include <cmath>
-#include "Calculation.h"
+//#include "Calculation.h"
 #include "Test1.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
-ASensorStaticMeshActor::ASensorStaticMeshActor()
+AFieldActor::AFieldActor()
 {	
+	PrimaryActorTick.bCanEverTick = true;
+
+	USceneComponent* root = CreateDefaultSubobject<USceneComponent>("Root");
+	SetRootComponent(root);
+
+#pragma region Creating InstancedMesh
 	InstancedMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*FString("InstancedMesh"));
-	//InstancedMesh = NewObject<UInstancedStaticMeshComponent>();
 
 	// Оптимизации
 	InstancedMesh->SetCollisionProfileName(FName("NoCollision"), false);
@@ -18,19 +23,36 @@ ASensorStaticMeshActor::ASensorStaticMeshActor()
 	InstancedMesh->SetLightAttachmentsAsGroup(true);
 	InstancedMesh->SetRenderCustomDepth(true);
 
-	InstancedMesh->AttachTo(RootComponent);
-	//PrimaryActorTick.bCanEverTick = true;
-	/*
-	StartTime = 0.0;
-	_secondsCounter = StartTime;
-	_updateSensors();*/
+	//InstancedMesh->AttachTo(RootComponent);
+	InstancedMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+#pragma endregion
+
+#pragma region Creating splines
+
+	int componentCounter = 0;
+
+	TArray<FVector> locations = Calculator::CalculateLocations(SplineResolution);
+	for (FVector location : locations)
+	{
+
+		SplineComponent = CreateDefaultSubobject<USplineComponent>(FName("SplineComponent_" + FString::FromInt(componentCounter)));
+		SplineComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		//SplineComponent->RemoveSplinePoint(1);		// Удалить дефолтную точку.
+
+		SplineComponent->SetRelativeLocation(location);
+
+		componentCounter++;
+	}
+
+#pragma endregion
 }
 
-void ASensorStaticMeshActor::OnConstruction(const FTransform& transform)
+void AFieldActor::OnConstruction(const FTransform& transform)
 {
 	Super::OnConstruction(transform);
 
-	if (VectorMesh != NULL)
+#pragma region Updating vectors
+	if (VectorMesh != NULL)	// TODO: переместить в конструктор и PostLoad.
 	{
 		InstancedMesh->SetStaticMesh(VectorMesh);
 
@@ -40,36 +62,62 @@ void ASensorStaticMeshActor::OnConstruction(const FTransform& transform)
 			_createField();
 		}
 	}
+#pragma endregion
+
+#pragma region Updating splines
+	/*
+	Решение по динамическому созданию компонентов вне конструктора взято отсюда:
+	https://forums.unrealengine.com/development-discussion/c-gameplay-programming/13196-construction-scripting-in-c-addstaticmeshcomponent
+	и обновлений для новых версий движка:
+	https://answers.unrealengine.com/questions/188898/how-can-i-add-components-in-the-onconstruction-fun.html
+	*/
+
+	// Init splines
+	//SplineComponent = NewObject<USplineComponent>(this);
+	//SplineComponent->RegisterComponent();
+	//SplineComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	//SplineComponent->CreationMethod = EComponentCreationMethod::UserConstructionScript;		// Без этого могут быть проблемы со сборкой мусора.
+	//SplineComponent->RemoveSplinePoint(1);		// Удалить дефолтную точку.
+	
+	//spline->SetRelativeLocation(FVector(0, 0, 0));
+	//SplineComponent->AddSplinePoint(FVector(100, 0, 0), ESplineCoordinateSpace::Local);
+
+	//spline->AddPoint(FSplinePoint(1.0, FVector(100, 0, 0)));
+#pragma endregion
+}
+
+void AFieldActor::PostLoad()
+{
+	Super::PostLoad();
 }
 
 #if WITH_EDITOR
-void ASensorStaticMeshActor::PostEditChangeProperty(FPropertyChangedEvent& e)
+void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)
 {
 	Super::PostEditChangeProperty(e);
 
 	FName PropertyName = (e.Property != NULL) ? e.MemberProperty->GetFName() : NAME_None;
 
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(ASensorStaticMeshActor, VectorMesh))
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, VectorMesh))
 	{
 		InstancedMesh->SetStaticMesh(VectorMesh);
 		//_removeField();
 		//_createField();
 	}
 }
-
 #endif
 
-void ASensorStaticMeshActor::_createField()
+void AFieldActor::_createField()
 {
-	TArray<FVector*>* locations = Calculator::CalculateLocations(&Resolution);
+	TArray<FVector> locations = Calculator::CalculateLocations(VectorFieldResolution);
 
-	for (FVector* location : *locations)
+	for (FVector location : locations)
 	{
 		_createSensorInstancedMesh(location);
 	}
 }
 
-void ASensorStaticMeshActor::_removeField()
+void AFieldActor::_removeField()
 {
 	int instanceCount = InstancedMesh->GetInstanceCount();
 
@@ -79,13 +127,13 @@ void ASensorStaticMeshActor::_removeField()
 	}
 }
 
-int ASensorStaticMeshActor::_createSensorInstancedMesh(FVector* location)
+int AFieldActor::_createSensorInstancedMesh(FVector location)
 {
 	auto rotation = FRotator(0, 0, 0);
-	FVector* scaledLocation = _scalarMultiply(location, SizeMultipiler);
+	FVector scaledLocation = _scalarMultiply(location, SizeMultipiler);
 
 	/* Расчет радиуса меша */
-	FVector distanse = Calculator::GetDistanceBetweenSensors(&Resolution) * SizeMultipiler;
+	FVector distanse = Calculator::GetDistanceBetweenSensors(VectorFieldResolution) * SizeMultipiler;
 	//double radius = (sqrt(pow(distanse, 2) + pow(distanse, 2)) / 2) * 0.25;	// Для сфер.
 	//double radiusMultipiler = 0.5;
 	double radiusX = (sqrt(pow(distanse.X, 2) + pow(distanse.X, 2)) / 2) * SensorMeshRadiusMultipiler;
@@ -95,20 +143,20 @@ int ASensorStaticMeshActor::_createSensorInstancedMesh(FVector* location)
 	// Пересчитаем радиус, учитывая что у сферы из StarterContent радиус равен 50:
 	FVector meshRadius = radius / 50.0;
 
-	auto transform = FTransform(rotation, *scaledLocation, meshRadius);
+	auto transform = FTransform(rotation, scaledLocation, meshRadius);
 	return InstancedMesh->AddInstance(transform);
 }
 
-FVector* ASensorStaticMeshActor::_scalarMultiply(FVector* vector, float multipiler)
+FVector AFieldActor::_scalarMultiply(FVector vector, float multipiler)
 {
-	vector->X *= multipiler;
-	vector->Y *= multipiler;
-	vector->Z *= multipiler;
+	vector.X *= multipiler;
+	vector.Y *= multipiler;
+	vector.Z *= multipiler;
 
 	return vector;
 }
 
-void ASensorStaticMeshActor::BeginPlay()
+void AFieldActor::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -116,7 +164,7 @@ void ASensorStaticMeshActor::BeginPlay()
 	//_updateSensors();
 }
 
-void ASensorStaticMeshActor::Tick(float DeltaSeconds)
+void AFieldActor::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
@@ -128,7 +176,7 @@ void ASensorStaticMeshActor::Tick(float DeltaSeconds)
 	}*/
 }
 
-void ASensorStaticMeshActor::OnButtonPressed()
+void AFieldActor::OnButtonPressed()
 {
 	//_isStarted = true;
 }

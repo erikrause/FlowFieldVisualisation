@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-//PRAGMA_DISABLE_OPTIMIZATION
+PRAGMA_DISABLE_OPTIMIZATION
 
-#include "Calculation.h"
+#include "Calculator.h"
 #include <vector>
 #include <map>
 #include <cmath>
@@ -155,34 +155,45 @@ double Calculation::calc_pres(double time, double x, double y, double z)//поле д
     }
 }*/
 
-TArray<FVector*>* Calculator::CalculateLocations(FVector* scale)
+TArray<FVector> Calculator::CalculateLocations(FVector scale)
 {
-    TArray<FVector*>* locations = new TArray<FVector*>();
-
-    double temp_x, temp_y, temp_z;
-    int num_p_along_x = scale->X;
-    int num_p_along_y = scale->Y;
-    int num_p_along_z = scale->Z;
-
-    for (int i = 0; i < scale->X; i++)
+    // Проверка, если одна из осей <= 1:
+    FVector axisMask = FVector(1, 1, 1);
+    
+    for (int axis = 0; axis < 3; axis++)
     {
-        temp_x = (B - A) * (double)i / (double)(scale->X - 1) + A;
-        for (int j = 0; j < scale->Y; j++)
+        if (scale[axis] <= 1)
         {
-            temp_y = (B - A) * (double)j / (double)(scale->Y - 1) + A;
-            for (int k = 0; k < scale->Z; k++)
-            {
-                temp_z = (B - A) * (double)k / (double)(scale->Z - 1) + A;
+            scale[axis] = 2;    // минимальное значение, возможное в цикле.
+            axisMask[axis] = 0;     // в конце по этой маске ось, которая <= обнулится.
+        }
+    }
 
-                //locations->push_back(loc);
-                locations->Add(new FVector(temp_x, temp_y, temp_z));
+
+    TArray<FVector> locations = TArray<FVector>();
+
+    for (int i = 0; i < scale.X; i++)
+    {
+        FVector currentLocation = FVector(0, 0, 0);
+        currentLocation.X = (B - A) * (double)i / (double)(scale.X - 1) + A;
+
+        for (int j = 0; j < scale.Y; j++)
+        {
+            currentLocation.Y = (B - A) * (double)j / (double)(scale.Y - 1) + A;
+
+            for (int k = 0; k < scale.Z; k++)
+            {
+                currentLocation.Z = (B - A) * (double)k / (double)(scale.Z - 1) + A;
+
+                locations.Add(currentLocation * axisMask);
             }
         }
     }
+
     return locations;
 }
 
-FVector Calculator::GetDistanceBetweenSensors(FVector* scale)
+FVector Calculator::GetDistanceBetweenSensors(FVector scale)
 {
     /*int num_p_along_x = scale;
     return ((B - A) * (double)2 / (double)(num_p_along_x - 1) + A) -
@@ -190,14 +201,14 @@ FVector Calculator::GetDistanceBetweenSensors(FVector* scale)
 
     FVector distance = FVector();
 
-    distance.X = ((B - A) * (double)2 / (double)(scale->X - 1) + A) -
-        ((B - A) * (double)1 / (double)(scale->X - 1) + A);
+    distance.X = ((B - A) * (double)2 / (double)(scale.X - 1) + A) -
+        ((B - A) * (double)1 / (double)(scale.X - 1) + A);
 
-    distance.Y = ((B - A) * (double)2 / (double)(scale->Y - 1) + A) -
-        ((B - A) * (double)1 / (double)(scale->Y - 1) + A);
+    distance.Y = ((B - A) * (double)2 / (double)(scale.Y - 1) + A) -
+        ((B - A) * (double)1 / (double)(scale.Y - 1) + A);
 
-    distance.Z = ((B - A) * (double)2 / (double)(scale->Z - 1) + A) -
-        ((B - A) * (double)1 / (double)(scale->Z - 1) + A);
+    distance.Z = ((B - A) * (double)2 / (double)(scale.Z - 1) + A) -
+        ((B - A) * (double)1 / (double)(scale.Z - 1) + A);
 
     return distance;
 }

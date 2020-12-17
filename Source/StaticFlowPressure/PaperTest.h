@@ -8,12 +8,12 @@
 /**
  * 
  */
-class STATICFLOWPRESSURE_API Test1 : public Calculator
+class STATICFLOWPRESSURE_API PaperTest : public Calculator
 {
 public:
-	Test1();
-	~Test1();
-	
+	PaperTest();
+	~PaperTest();
+
 	// Унаследовано через Calculator
 	virtual FVector calc_vel(double time, double x, double y, double z) override;
 	virtual double calc_pres(double time, double x, double y, double z, FVector vel) override;
