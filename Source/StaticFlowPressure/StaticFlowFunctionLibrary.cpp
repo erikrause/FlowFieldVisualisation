@@ -11,8 +11,9 @@ UStaticFlowFunctionLibrary::UStaticFlowFunctionLibrary()
 
 TMap<FVector, AFieldActor*>  UStaticFlowFunctionLibrary::CreateSensors(UObject* WorldContextObject, FVector& scale)
 {
+	/*
 	TMap<FVector, AFieldActor*> sensorsMap = TMap<FVector, AFieldActor*>();
-	TArray<FVector> locations = Calculator::CalculateLocations(scale);
+	TArray<FVector> locations = Calculator::CalculateLocations(scale, 200);
 	UWorld* world = WorldContextObject->GetWorld();
 
 	for (FVector location : locations)
@@ -21,5 +22,6 @@ TMap<FVector, AFieldActor*>  UStaticFlowFunctionLibrary::CreateSensors(UObject* 
 		sensorsMap.Add(location, sensor);
 	}
 	
-	return sensorsMap;
+	return sensorsMap;*/
+	return TMap<FVector, AFieldActor*>();
 }

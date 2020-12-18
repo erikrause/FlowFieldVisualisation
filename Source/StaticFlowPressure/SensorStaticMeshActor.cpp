@@ -9,6 +9,7 @@ PRAGMA_DISABLE_OPTIMIZATION
 
 AFieldActor::AFieldActor()
 {	
+	_calculator = new PaperTest();
 	PrimaryActorTick.bCanEverTick = true;
 
 	USceneComponent* root = CreateDefaultSubobject<USceneComponent>("Root");
@@ -29,17 +30,16 @@ AFieldActor::AFieldActor()
 
 #pragma region Creating splines
 
-	int componentCounter = 0;
+	int componentCounter = 0;	// Needs for naming.
 
-	TArray<FVector> locations = Calculator::CalculateLocations(SplineResolution);
+	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y);
 	for (FVector location : locations)
 	{
-
-		SplineComponent = CreateDefaultSubobject<USplineComponent>(FName("SplineComponent_" + FString::FromInt(componentCounter)));
-		SplineComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-		//SplineComponent->RemoveSplinePoint(1);		// Удалить дефолтную точку.
-
-		SplineComponent->SetRelativeLocation(location);
+		USplineComponent* splineComponent = CreateDefaultSubobject<USplineComponent>(FName("SplineComponent_" + FString::FromInt(componentCounter)));	// TODO: сплайны нужно хранить в свойствах актора (в массиве).
+		splineComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		splineComponent->RemoveSplinePoint(1);		// Удалить дефолтную точку.
+		splineComponent->SetRelativeLocation(location * SizeMultipiler);
+		_updateSplineComponent(splineComponent, 0);
 
 		componentCounter++;
 	}
@@ -109,11 +109,11 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)
 
 void AFieldActor::_createField()
 {
-	TArray<FVector> locations = Calculator::CalculateLocations(VectorFieldResolution);
+	TArray<FVector> locations = _calculator->CalculateLocations(VectorFieldResolution);
 
 	for (FVector location : locations)
 	{
-		_createSensorInstancedMesh(location);
+		_createSensorInstancedMesh(location * SizeMultipiler);
 	}
 }
 
@@ -130,10 +130,9 @@ void AFieldActor::_removeField()
 int AFieldActor::_createSensorInstancedMesh(FVector location)
 {
 	auto rotation = FRotator(0, 0, 0);
-	FVector scaledLocation = _scalarMultiply(location, SizeMultipiler);
 
 	/* Расчет радиуса меша */
-	FVector distanse = Calculator::GetDistanceBetweenSensors(VectorFieldResolution) * SizeMultipiler;
+	FVector distanse = _calculator->GetDistanceBetweenSensors(VectorFieldResolution) * SizeMultipiler;
 	//double radius = (sqrt(pow(distanse, 2) + pow(distanse, 2)) / 2) * 0.25;	// Для сфер.
 	//double radiusMultipiler = 0.5;
 	double radiusX = (sqrt(pow(distanse.X, 2) + pow(distanse.X, 2)) / 2) * SensorMeshRadiusMultipiler;
@@ -143,17 +142,39 @@ int AFieldActor::_createSensorInstancedMesh(FVector location)
 	// Пересчитаем радиус, учитывая что у сферы из StarterContent радиус равен 50:
 	FVector meshRadius = radius / 50.0;
 
-	auto transform = FTransform(rotation, scaledLocation, meshRadius);
+	auto transform = FTransform(rotation, location, meshRadius);
 	return InstancedMesh->AddInstance(transform);
 }
 
-FVector AFieldActor::_scalarMultiply(FVector vector, float multipiler)
+void AFieldActor::_updateSplineComponent(USplineComponent* splineComponent, float time)
 {
-	vector.X *= multipiler;
-	vector.Y *= multipiler;
-	vector.Z *= multipiler;
+	int i = 0;
+	FVector splineComponentLocation = splineComponent->GetRelativeLocation();
+	FVector min = _calculator->LowerLimits;
+	FVector max = _calculator->UpperLimits;
 
-	return vector;
+	// Init loop:
+	FVector splinePoint = (splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local) + splineComponentLocation) / SizeMultipiler;
+
+	FVector vel = _calculator->calc_vel(0, splinePoint.X, splinePoint.Y, splinePoint.Z);
+	vel.Normalize();
+	FVector newSplinePoint = (splinePoint + vel);// -(splineComponentLocation / SizeMultipiler);
+	// /
+
+	while (newSplinePoint.X >= min.X && newSplinePoint.Y >= min.Y && newSplinePoint.Z >= min.Z &&
+		   newSplinePoint.X <= max.X && newSplinePoint.Y <= max.Y && newSplinePoint.Z <= max.Z &&
+		   i < 100)
+	{
+		splineComponent->AddSplineLocalPoint(newSplinePoint * SizeMultipiler - splineComponentLocation);		// TODO: сделать отдельный multipiler.
+		//splinePoint = (splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local) + splineComponentLocation) / SizeMultipiler;
+
+		vel = _calculator->calc_vel(0, newSplinePoint.X, newSplinePoint.Y, newSplinePoint.Z);
+		vel.Normalize();
+
+		newSplinePoint = (newSplinePoint + vel);// -(splineComponentLocation / SizeMultipiler);
+		i++;
+
+	}
 }
 
 void AFieldActor::BeginPlay()

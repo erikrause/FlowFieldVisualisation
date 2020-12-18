@@ -12,8 +12,8 @@ PRAGMA_DISABLE_OPTIMIZATION
 */
 #define num_time_layers 40
 #define radius 5.9//максимальный радиус сферы, нужен дл€ задач со сферической симметрией
-#define A 1//начальна€ точка, дл€ задач в пр€моугольной области
-#define B 6//конечна€ точка, дл€ задач в пр€моугольной области
+//#define A 1//начальна€ точка, дл€ задач в пр€моугольной области
+//#define B 6//конечна€ точка, дл€ задач в пр€моугольной области
 #define max_time 1//максимальное значение времени
 //#define epsilon 1//параметр
 #define sigma 1//параметр дл€ теста 4
@@ -155,37 +155,48 @@ double Calculation::calc_pres(double time, double x, double y, double z)//поле д
     }
 }*/
 
-TArray<FVector> Calculator::CalculateLocations(FVector scale)
+/// elements of resolution must be > 1.
+/// isApplyBias - применить смещнеие. ≈сли false - то точки будут в диапазоне [0, 1].
+/// 
+TArray<FVector> Calculator::CalculateLocations(FVector resolution, bool isApplyBias)
 {
-    // ѕроверка, если одна из осей <= 1:
+    // ѕроверка, если одна из осей <= 1 (костыль, TODO):
     FVector axisMask = FVector(1, 1, 1);
     
     for (int axis = 0; axis < 3; axis++)
     {
-        if (scale[axis] <= 1)
+        if (resolution[axis] <= 1)
         {
-            scale[axis] = 2;    // минимальное значение, возможное в цикле.
-            axisMask[axis] = 0;     // в конце по этой маске ось, котора€ <= обнулитс€.
+            resolution[axis] = 2;    // минимальное значение, возможное в цикле.
+            axisMask[axis] = 0;     // ось, котора€ <=, обнулитс€
         }
     }
 
+    double tempX, tempY, tempZ;
 
     TArray<FVector> locations = TArray<FVector>();
 
-    for (int i = 0; i < scale.X; i++)
+    for (int i = 0; i < resolution.X; i++)
     {
-        FVector currentLocation = FVector(0, 0, 0);
-        currentLocation.X = (B - A) * (double)i / (double)(scale.X - 1) + A;
+        tempX = (double)i / (double)(resolution.X - 1);
 
-        for (int j = 0; j < scale.Y; j++)
+        for (int j = 0; j < resolution.Y; j++)
         {
-            currentLocation.Y = (B - A) * (double)j / (double)(scale.Y - 1) + A;
+            tempY = (double)j / (double)(resolution.Y - 1);
 
-            for (int k = 0; k < scale.Z; k++)
+            for (int k = 0; k < resolution.Z; k++)
             {
-                currentLocation.Z = (B - A) * (double)k / (double)(scale.Z - 1) + A;
+                tempZ = (double)k / (double)(resolution.Z - 1);
 
-                locations.Add(currentLocation * axisMask);
+                FVector location = FVector(tempX, tempY, tempZ);
+                location *= axisMask;
+
+                if (isApplyBias)
+                {
+                    location = (UpperLimits - LowerLimits)* location + LowerLimits;
+                }
+
+                locations.Add(location);
             }
         }
     }
@@ -193,7 +204,35 @@ TArray<FVector> Calculator::CalculateLocations(FVector scale)
     return locations;
 }
 
-FVector Calculator::GetDistanceBetweenSensors(FVector scale)
+TArray<FVector> Calculator::CalculateFlatLocations(float xRes, float yRes, bool isApplyBias)
+{
+    TArray<FVector> locations = TArray<FVector>();
+
+    double tempX, tempY;
+
+    for (int i = 0; i < xRes; i++)
+    {
+        tempX = (double)i / (double)(xRes - 1);
+
+        for (int j = 0; j < yRes; j++)
+        {
+            tempY = (double)j / (double)(yRes - 1);
+
+            FVector location = FVector(tempX, tempY, 0);
+
+            if (isApplyBias)
+            {
+                location = (UpperLimits - LowerLimits) * location + LowerLimits;
+            }
+
+            locations.Add(location);
+        }
+    }
+
+    return locations;
+}
+
+FVector Calculator::GetDistanceBetweenSensors(FVector resolution)
 {
     /*int num_p_along_x = scale;
     return ((B - A) * (double)2 / (double)(num_p_along_x - 1) + A) -
@@ -201,14 +240,14 @@ FVector Calculator::GetDistanceBetweenSensors(FVector scale)
 
     FVector distance = FVector();
 
-    distance.X = ((B - A) * (double)2 / (double)(scale.X - 1) + A) -
-        ((B - A) * (double)1 / (double)(scale.X - 1) + A);
+    distance.X = ((UpperLimits.X - LowerLimits.X) * (double)2 / (double)(resolution.X - 1) + LowerLimits.X) -
+        ((UpperLimits.X - LowerLimits.X) * (double)1 / (double)(resolution.X - 1) + LowerLimits.X);
 
-    distance.Y = ((B - A) * (double)2 / (double)(scale.Y - 1) + A) -
-        ((B - A) * (double)1 / (double)(scale.Y - 1) + A);
+    distance.Y = ((UpperLimits.Y - LowerLimits.Y) * (double)2 / (double)(resolution.Y - 1) + LowerLimits.Y) -
+        ((UpperLimits.Y - LowerLimits.Y) * (double)1 / (double)(resolution.Y - 1) + LowerLimits.Y);
 
-    distance.Z = ((B - A) * (double)2 / (double)(scale.Z - 1) + A) -
-        ((B - A) * (double)1 / (double)(scale.Z - 1) + A);
+    distance.Z = ((UpperLimits.Z - LowerLimits.Z) * (double)2 / (double)(resolution.Z - 1) + LowerLimits.Z) -
+        ((UpperLimits.Z - LowerLimits.Z) * (double)1 / (double)(resolution.Z - 1) + LowerLimits.Z);
 
     return distance;
 }
