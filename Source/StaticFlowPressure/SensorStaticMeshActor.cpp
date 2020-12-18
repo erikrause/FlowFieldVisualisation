@@ -166,7 +166,7 @@ void AFieldActor::_updateSplineComponent(USplineComponent* splineComponent, floa
 
 	while (newSplinePoint.X + offset.X >= min.X && newSplinePoint.Y + offset.Y >= min.Y && newSplinePoint.Z + offset.Z >= min.Z &&
 		   newSplinePoint.X + offset.X <= max.X && newSplinePoint.Y + offset.Y <= max.Y && newSplinePoint.Z + offset.Z <= max.Z &&
-		   i < 100)
+		   i < 5000)
 	{
 		splineComponent->AddSplineLocalPoint(newSplinePoint * SizeMultipiler);
 
@@ -180,20 +180,27 @@ void AFieldActor::_updateSplineComponent(USplineComponent* splineComponent, floa
 
 	/*
 	// End of spline:
-	FVector lastSplinePoint = (splineComponent->GetLocationAtSplinePoint(i - 1, ESplineCoordinateSpace::Local) + splineComponentLocation) / SizeMultipiler;
-	vel = _calculator->calc_vel(0, lastSplinePoint.X, lastSplinePoint.Y, lastSplinePoint.Z);
-
-	if (newSplinePoint.X >= min.X && newSplinePoint.Y >= min.Y && newSplinePoint.Z >= min.Z)
+	if (i < 1000)
 	{
-		vel /= vel.GetMin();
-	}
-	else
-	{
-		vel /= vel.GetMax();
-	}
+		FVector lastSplinePoint = (splineComponent->GetLocationAtSplinePoint(i - 1, ESplineCoordinateSpace::Local) / SizeMultipiler + offset);
+		vel = _calculator->calc_vel(0, lastSplinePoint.X, lastSplinePoint.Y, lastSplinePoint.Z);
+		vel.Normalize();
+		vel *= SplineCalcStep;
+		FVector outerSplineVector = vel - lastSplinePoint;	// Вектор, который вышел за границы.
+		FVector prob = lastSplinePoint + vel;
 
-	newSplinePoint = (newSplinePoint + vel);
-	splineComponent->AddSplineLocalPoint(newSplinePoint * SizeMultipiler - splineComponentLocation);*/
+		if (newSplinePoint.X + offset.X >= min.X && newSplinePoint.Y + offset.Y >= min.Y && newSplinePoint.Z + offset.Z >= min.Z)
+		{
+			outerSplineVector /= outerSplineVector.GetMin();
+		}
+		else
+		{
+			outerSplineVector /= outerSplineVector.GetMax();
+		}
+
+		newSplinePoint = (newSplinePoint + outerSplineVector);
+		splineComponent->AddSplineLocalPoint(newSplinePoint * SizeMultipiler);
+	}*/
 }
 
 void AFieldActor::BeginPlay()
