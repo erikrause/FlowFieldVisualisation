@@ -21,24 +21,30 @@ class STATICFLOWPRESSURE_API AFieldActor : public AActor
 public:
 	AFieldActor();
 
-	UPROPERTY(EditAnywhere, Category = "Calculation")
+	UPROPERTY(EditAnywhere, Category = "Vector calculation")
 		UStaticMesh* VectorMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		float SplineCalcStep = 0.1;
+
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		TArray<USplineComponent*> SplineComponents = TArray<USplineComponent*>();
 
 	UInstancedStaticMeshComponent* InstancedMesh;
 
-	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Vector field resolution (number of sensors by axis)")
+	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vector field resolution (number of sensors by axis)")
 		FVector VectorFieldResolution = FVector(40, 40, 40);
 
-	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Spline resolution (number of splines by axis)")
+	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Spline resolution (number of splines by axis)")
 		FVector SplineResolution = FVector(5, 5, 1);	// TODO: переделать через плотность.
 
-	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Vectors size (multipiler)")
+	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vectors size (multipiler)")
 		float SensorMeshRadiusMultipiler = 0.25;
 
-	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Show vector field")
+	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Show vector field")
 		bool IsShowVectors = true;
 
-	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Vector field size (multipiler)")
+	UPROPERTY(EditAnywhere, Category = "General calculation", DisplayName = "Field size (multipiler)")
 		float SizeMultipiler = 200;
 
 	virtual void BeginPlay() override;

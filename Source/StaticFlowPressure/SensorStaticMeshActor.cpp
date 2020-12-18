@@ -39,6 +39,7 @@ AFieldActor::AFieldActor()
 		splineComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 		splineComponent->RemoveSplinePoint(1);		// Удалить дефолтную точку.
 		splineComponent->SetRelativeLocation(location * SizeMultipiler);
+		SplineComponents.Add(splineComponent);
 		_updateSplineComponent(splineComponent, 0);
 
 		componentCounter++;
@@ -154,27 +155,45 @@ void AFieldActor::_updateSplineComponent(USplineComponent* splineComponent, floa
 	FVector max = _calculator->UpperLimits;
 
 	// Init loop:
-	FVector splinePoint = (splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local) + splineComponentLocation) / SizeMultipiler;
+	FVector offset = splineComponentLocation / SizeMultipiler;
+	FVector splinePoint = (splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local) / SizeMultipiler + offset);
 
 	FVector vel = _calculator->calc_vel(0, splinePoint.X, splinePoint.Y, splinePoint.Z);
 	vel.Normalize();
-	FVector newSplinePoint = (splinePoint + vel);// -(splineComponentLocation / SizeMultipiler);
+	vel *= SplineCalcStep;
+	FVector newSplinePoint = (splinePoint + vel) - offset;
 	// /
 
-	while (newSplinePoint.X >= min.X && newSplinePoint.Y >= min.Y && newSplinePoint.Z >= min.Z &&
-		   newSplinePoint.X <= max.X && newSplinePoint.Y <= max.Y && newSplinePoint.Z <= max.Z &&
+	while (newSplinePoint.X + offset.X >= min.X && newSplinePoint.Y + offset.Y >= min.Y && newSplinePoint.Z + offset.Z >= min.Z &&
+		   newSplinePoint.X + offset.X <= max.X && newSplinePoint.Y + offset.Y <= max.Y && newSplinePoint.Z + offset.Z <= max.Z &&
 		   i < 100)
 	{
-		splineComponent->AddSplineLocalPoint(newSplinePoint * SizeMultipiler - splineComponentLocation);		// TODO: сделать отдельный multipiler.
-		//splinePoint = (splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local) + splineComponentLocation) / SizeMultipiler;
+		splineComponent->AddSplineLocalPoint(newSplinePoint * SizeMultipiler);
 
-		vel = _calculator->calc_vel(0, newSplinePoint.X, newSplinePoint.Y, newSplinePoint.Z);
+		vel = _calculator->calc_vel(0, newSplinePoint.X + offset.X, newSplinePoint.Y + offset.Y, newSplinePoint.Z + offset.Z);
 		vel.Normalize();
+		vel *= SplineCalcStep;
 
-		newSplinePoint = (newSplinePoint + vel);// -(splineComponentLocation / SizeMultipiler);
+		newSplinePoint = (newSplinePoint + vel);
 		i++;
-
 	}
+
+	/*
+	// End of spline:
+	FVector lastSplinePoint = (splineComponent->GetLocationAtSplinePoint(i - 1, ESplineCoordinateSpace::Local) + splineComponentLocation) / SizeMultipiler;
+	vel = _calculator->calc_vel(0, lastSplinePoint.X, lastSplinePoint.Y, lastSplinePoint.Z);
+
+	if (newSplinePoint.X >= min.X && newSplinePoint.Y >= min.Y && newSplinePoint.Z >= min.Z)
+	{
+		vel /= vel.GetMin();
+	}
+	else
+	{
+		vel /= vel.GetMax();
+	}
+
+	newSplinePoint = (newSplinePoint + vel);
+	splineComponent->AddSplineLocalPoint(newSplinePoint * SizeMultipiler - splineComponentLocation);*/
 }
 
 void AFieldActor::BeginPlay()
