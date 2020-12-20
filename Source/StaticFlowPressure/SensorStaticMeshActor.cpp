@@ -15,20 +15,35 @@ AFieldActor::AFieldActor()
 	USceneComponent* root = CreateDefaultSubobject<USceneComponent>("Root");
 	SetRootComponent(root);
 
-#pragma region Creating InstancedMesh
-	InstancedMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*FString("InstancedMesh"));
+	#pragma region Creating VectorInstancedMesh
+	VectorInstancedMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*FString("VectorInstancedMesh"));
+	VectorInstancedMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	//VectorInstancedMesh->SetRelativeTransform(FTransform((FRotator(0,0,0), FVector(0,0,0), FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler))));	// не работает
 
 	// Оптимизации
-	InstancedMesh->SetCollisionProfileName(FName("NoCollision"), false);
-	InstancedMesh->SetCastShadow(false);
-	InstancedMesh->SetLightAttachmentsAsGroup(true);
-	InstancedMesh->SetRenderCustomDepth(true);
+	VectorInstancedMesh->SetCollisionProfileName(FName("NoCollision"), false);
+	VectorInstancedMesh->SetCastShadow(false);
+	VectorInstancedMesh->SetLightAttachmentsAsGroup(true);
+	VectorInstancedMesh->SetRenderCustomDepth(true);
 
-	//InstancedMesh->AttachTo(RootComponent);
-	InstancedMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-#pragma endregion
+	#pragma endregion
 
-#pragma region Creating splines
+	#pragma region Creating splines
+
+	SplineInstancedMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*FString("SplineInstancedMesh"));
+	SplineInstancedMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	SplineInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
+
+	// Оптимизации
+	SplineInstancedMesh->SetCollisionProfileName(FName("NoCollision"), false);
+	SplineInstancedMesh->SetCastShadow(false);
+	SplineInstancedMesh->SetLightAttachmentsAsGroup(true);
+	SplineInstancedMesh->SetRenderCustomDepth(true);
+
+	// Set mesh asset
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(TEXT("/Game/StarterContent/Shapes/Shape_Cube.Shape_Cube"));
+	SplineMesh = MeshAsset.Object;
+	SplineInstancedMesh->SetStaticMesh(SplineMesh);
 
 	int componentCounter = 0;	// Needs for naming.
 
@@ -38,14 +53,15 @@ AFieldActor::AFieldActor()
 		USplineComponent* splineComponent = CreateDefaultSubobject<USplineComponent>(FName("SplineComponent_" + FString::FromInt(componentCounter)));	// TODO: сплайны нужно хранить в свойствах актора (в массиве).
 		splineComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 		splineComponent->RemoveSplinePoint(1);		// Удалить дефолтную точку.
-		splineComponent->SetRelativeLocation(location * SizeMultipiler);
+		//splineComponent->bInputSplinePointsToConstructionScript = true;
+		splineComponent->SetRelativeLocation(location * SizeMultipiler);		// TODO: refactor location size multipiler.
 		SplineComponents.Add(splineComponent);
-		_updateSplineComponent(splineComponent, 0);
+		_createSplinePoints(splineComponent, 0);
 
 		componentCounter++;
 	}
 
-#pragma endregion
+	#pragma endregion
 }
 
 void AFieldActor::OnConstruction(const FTransform& transform)
@@ -55,7 +71,7 @@ void AFieldActor::OnConstruction(const FTransform& transform)
 #pragma region Updating vectors
 	if (VectorMesh != NULL)	// TODO: переместить в конструктор и PostLoad.
 	{
-		InstancedMesh->SetStaticMesh(VectorMesh);
+		VectorInstancedMesh->SetStaticMesh(VectorMesh);
 
 		_removeField();
 		if (IsShowVectors == true)
@@ -101,10 +117,22 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)
 
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, VectorMesh))
 	{
-		InstancedMesh->SetStaticMesh(VectorMesh);
+		VectorInstancedMesh->SetStaticMesh(VectorMesh);
 		//_removeField();
 		//_createField();
 	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplineCalcStep) ||
+		PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SimulationTime))
+	{
+		UpdateSplinePoints();
+	}
+	/*else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplineMesh))
+	{
+		if (SplineMesh != NULL)
+		{
+			SplineInstancedMesh->SetStaticMesh(SplineMesh);
+		}
+	}*/
 }
 #endif
 
@@ -120,11 +148,11 @@ void AFieldActor::_createField()
 
 void AFieldActor::_removeField()
 {
-	int instanceCount = InstancedMesh->GetInstanceCount();
+	int instanceCount = VectorInstancedMesh->GetInstanceCount();
 
 	for (int i = instanceCount; i > 0; i--)	// нужно удалять с конца
 	{
-		InstancedMesh->RemoveInstance(i - 1);
+		VectorInstancedMesh->RemoveInstance(i - 1);
 	}
 }
 
@@ -133,7 +161,7 @@ int AFieldActor::_createSensorInstancedMesh(FVector location)
 	auto rotation = FRotator(0, 0, 0);
 
 	/* Расчет радиуса меша */
-	FVector distanse = _calculator->GetDistanceBetweenSensors(VectorFieldResolution) * SizeMultipiler;
+	FVector distanse = _calculator->GetDistanceBetweenSensors(VectorFieldResolution) * SizeMultipiler;	// TODO: refactor location size multipiler.
 	//double radius = (sqrt(pow(distanse, 2) + pow(distanse, 2)) / 2) * 0.25;	// Для сфер.
 	//double radiusMultipiler = 0.5;
 	double radiusX = (sqrt(pow(distanse.X, 2) + pow(distanse.X, 2)) / 2) * SensorMeshRadiusMultipiler;
@@ -144,40 +172,86 @@ int AFieldActor::_createSensorInstancedMesh(FVector location)
 	FVector meshRadius = radius / 50.0;
 
 	auto transform = FTransform(rotation, location, meshRadius);
-	return InstancedMesh->AddInstance(transform);
+	return VectorInstancedMesh->AddInstance(transform);
 }
 
-void AFieldActor::_updateSplineComponent(USplineComponent* splineComponent, float time)
+/// <summary>
+/// Создаст линию тока по точкам, рассчитанным из скорости в t0. Удалит splineComponent из массива класса, если num of points = 1.
+/// </summary>
+/// <param name="splineComponent"></param>
+/// <param name="time"> t0 </param>
+void AFieldActor::_createSplinePoints(USplineComponent* splineComponent, float time, bool isConstructorCall)
 {
 	int i = 0;
 	FVector splineComponentLocation = splineComponent->GetRelativeLocation();
 	FVector min = _calculator->LowerLimits;
 	FVector max = _calculator->UpperLimits;
 
-	// Init loop:
+	// Loop init:
 	FVector offset = splineComponentLocation / SizeMultipiler;
 	FVector splinePoint = (splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local) / SizeMultipiler + offset);
 
 	FVector vel = _calculator->calc_vel(0, splinePoint.X, splinePoint.Y, splinePoint.Z);
 	vel.Normalize();
-	vel *= SplineCalcStep;
-	FVector newSplinePoint = (splinePoint + vel) - offset;
-	// /
+	FVector newSplinePoint = (splinePoint + vel * SplineCalcStep) - offset;
+	//
 
 	while (newSplinePoint.X + offset.X >= min.X && newSplinePoint.Y + offset.Y >= min.Y && newSplinePoint.Z + offset.Z >= min.Z &&
 		   newSplinePoint.X + offset.X <= max.X && newSplinePoint.Y + offset.Y <= max.Y && newSplinePoint.Z + offset.Z <= max.Z &&
-		   i < 5000)
+		   i < 50)
 	{
 		splineComponent->AddSplineLocalPoint(newSplinePoint * SizeMultipiler);
+		//splineComponent->SetSplinePointType(i + 1, ESplinePointType::Linear, true);		// TODO: check update arg.
 
+		// TODO: можно ли без конструктора?
+		USplineMeshComponent* splineMeshComponent;
+		if (isConstructorCall)
+
+			splineMeshComponent = CreateDefaultSubobject<USplineMeshComponent>(FName("SplineMeshComponent_" + FString::FromInt(i) + splineComponent->GetName()));
+
+		else
+			splineMeshComponent = NewObject<USplineMeshComponent>(this);
+
+		if (i > 0) 
+		{
+			//splineComponent->GetLocationAtSplinePoint(i - 1, ESplineCoordinateSpace::Local);
+			FVector scale = (FVector(0.01, 0.01, 0.01) * SplineThickness) / SizeMultipiler;	// Scale в 1 (для куба 100^3).
+			SplineInstancedMesh->AddInstance(FTransform(FRotator(0, 0, 0), (newSplinePoint + offset), scale));
+		}
+
+		/*splineMeshComponent->SetStaticMesh(SplineMesh);
+		splineMeshComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		splineMeshComponent->SetRelativeLocation(newSplinePoint * SizeMultipiler);
+
+		// Define the spline mesh points
+		if (i > 0)
+		{
+			// Define the spline mesh points:
+			FVector StartPoint = splineComponent->GetLocationAtSplinePoint(i - 1, ESplineCoordinateSpace::Type::Local);
+			FVector StartTangent = splineComponent->GetTangentAtSplinePoint(i - 1, ESplineCoordinateSpace::Type::Local);
+			FVector EndPoint = splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Type::Local);
+			FVector EndTangent = splineComponent->GetTangentAtSplinePoint(i, ESplineCoordinateSpace::Type::Local);
+			splineMeshComponent->SetStartAndEnd(StartPoint, StartTangent, EndPoint, EndTangent, true);
+		}*/
+
+
+		// Next loop prepare:
 		vel = _calculator->calc_vel(0, newSplinePoint.X + offset.X, newSplinePoint.Y + offset.Y, newSplinePoint.Z + offset.Z);
 		vel.Normalize();
-		vel *= SplineCalcStep;
-
-		newSplinePoint = (newSplinePoint + vel);
+		newSplinePoint = (newSplinePoint + vel * SplineCalcStep);
 		i++;
 	}
 
+
+	// Настройка нулевой точки.
+	/*if (i == 0)
+	{
+		splineComponent->RemoveSplinePoint(0, false);
+	}
+	else
+	{
+		splineComponent->SetSplinePointType(0, ESplinePointType::Linear);
+	}*/
 	/*
 	// End of spline:
 	if (i < 1000)
@@ -201,6 +275,15 @@ void AFieldActor::_updateSplineComponent(USplineComponent* splineComponent, floa
 		newSplinePoint = (newSplinePoint + outerSplineVector);
 		splineComponent->AddSplineLocalPoint(newSplinePoint * SizeMultipiler);
 	}*/
+}
+
+void AFieldActor::UpdateSplinePoints()
+{
+	for (USplineComponent* splineComponent : SplineComponents)
+	{
+		splineComponent->ClearSplinePoints();
+		_createSplinePoints(splineComponent, 0);
+	}
 }
 
 void AFieldActor::BeginPlay()

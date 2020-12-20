@@ -5,6 +5,7 @@
 #include "Calculator.h"
 #include "PaperTest.h"
 #include "Components/SplineComponent.h"
+#include "Components\SplineMeshComponent.h"
 #include "CoreMinimal.h"
 //#include "Engine/StaticMeshActor.h"
 #include "GameFramework/Actor.h"
@@ -21,16 +22,28 @@ class STATICFLOWPRESSURE_API AFieldActor : public AActor
 public:
 	AFieldActor();
 
+	UInstancedStaticMeshComponent* VectorInstancedMesh;
 	UPROPERTY(EditAnywhere, Category = "Vector calculation")
 		UStaticMesh* VectorMesh;
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+	UInstancedStaticMeshComponent* SplineInstancedMesh;
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		UStaticMesh* SplineMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		float SplineCalcStep = 0.2;
+		float SplineThickness = 50;
+
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		float SplineCalcStep = 2;
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		void UpdateSplinePoints();
+
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		float SimulationTime;
 
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
 		TArray<USplineComponent*> SplineComponents = TArray<USplineComponent*>();
 
-	UInstancedStaticMeshComponent* InstancedMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vector field resolution (number of sensors by axis)")
 		FVector VectorFieldResolution = FVector(40, 40, 40);
@@ -72,5 +85,5 @@ protected:
 
 	int _createSensorInstancedMesh(FVector location);
 
-	void _updateSplineComponent(USplineComponent* splineComponent, float time);
+	void _createSplinePoints(USplineComponent* splineComponent, float time, bool isConstructorCall = true);
 };
