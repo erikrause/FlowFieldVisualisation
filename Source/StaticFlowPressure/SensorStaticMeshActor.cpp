@@ -189,7 +189,7 @@ void AFieldActor::_createSplinePoints(USplineComponent* splineComponent, float t
 
 	// Loop init:
 	FVector offset = splineComponentLocation / SizeMultipiler;
-	FVector splinePoint = (splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local) / SizeMultipiler + offset);
+	FVector splinePoint = splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local) / SizeMultipiler + offset;
 
 	FVector vel = _calculator->calc_vel(0, splinePoint.X, splinePoint.Y, splinePoint.Z);
 	vel.Normalize();
@@ -212,27 +212,22 @@ void AFieldActor::_createSplinePoints(USplineComponent* splineComponent, float t
 		else
 			splineMeshComponent = NewObject<USplineMeshComponent>(this);
 
-		if (i > 0) 
-		{
-			//splineComponent->GetLocationAtSplinePoint(i - 1, ESplineCoordinateSpace::Local);
-			FVector scale = (FVector(0.01, 0.01, 0.01) * SplineThickness) / SizeMultipiler;	// Scale в 1 (для куба 100^3).
-			SplineInstancedMesh->AddInstance(FTransform(FRotator(0, 0, 0), (newSplinePoint + offset), scale));
-		}
+		FVector oldSplinePoint = splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local) / SizeMultipiler + offset;
+		float meshLength = (newSplinePoint + offset - oldSplinePoint).Size() * SizeMultipiler;
+		FVector scale = (FVector(0.01 * SplineThickness, 0.01 * SplineThickness, 0.01 * meshLength)) / SizeMultipiler;	// Scale в 1 (для куба 100^3).
+		SplineInstancedMesh->AddInstance(FTransform(FRotator(0, 0, 0), (newSplinePoint + offset), scale));
 
 		/*splineMeshComponent->SetStaticMesh(SplineMesh);
 		splineMeshComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 		splineMeshComponent->SetRelativeLocation(newSplinePoint * SizeMultipiler);
 
-		// Define the spline mesh points
-		if (i > 0)
-		{
-			// Define the spline mesh points:
-			FVector StartPoint = splineComponent->GetLocationAtSplinePoint(i - 1, ESplineCoordinateSpace::Type::Local);
-			FVector StartTangent = splineComponent->GetTangentAtSplinePoint(i - 1, ESplineCoordinateSpace::Type::Local);
-			FVector EndPoint = splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Type::Local);
-			FVector EndTangent = splineComponent->GetTangentAtSplinePoint(i, ESplineCoordinateSpace::Type::Local);
-			splineMeshComponent->SetStartAndEnd(StartPoint, StartTangent, EndPoint, EndTangent, true);
-		}*/
+		// Define the spline mesh points:
+		FVector StartPoint = splineComponent->GetLocationAtSplinePoint(i - 1, ESplineCoordinateSpace::Type::Local);
+		FVector StartTangent = splineComponent->GetTangentAtSplinePoint(i - 1, ESplineCoordinateSpace::Type::Local);
+		FVector EndPoint = splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Type::Local);
+		FVector EndTangent = splineComponent->GetTangentAtSplinePoint(i, ESplineCoordinateSpace::Type::Local);
+		splineMeshComponent->SetStartAndEnd(StartPoint, StartTangent, EndPoint, EndTangent, true);
+		*/
 
 
 		// Next loop prepare:

@@ -49,7 +49,7 @@ public:
 		FVector VectorFieldResolution = FVector(40, 40, 40);
 
 	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Spline resolution (number of splines by axis)")
-		FVector SplineResolution = FVector(15, 15, 1);	// TODO: переделать через плотность.
+		FVector SplineResolution = FVector(5, 5, 1);	// TODO: переделать через плотность.
 
 	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vectors size (multipiler)")
 		float SensorMeshRadiusMultipiler = 0.25;
