@@ -2,6 +2,7 @@
 PRAGMA_DISABLE_OPTIMIZATION
 
 #include "SensorStaticMeshActor.h"
+#include "Kismet/KismetMathLibrary.h"
 //#include <cmath>
 //#include "Calculation.h"
 #include "Test1.h"
@@ -198,7 +199,7 @@ void AFieldActor::_createSplinePoints(USplineComponent* splineComponent, float t
 
 	while (newSplinePoint.X + offset.X >= min.X && newSplinePoint.Y + offset.Y >= min.Y && newSplinePoint.Z + offset.Z >= min.Z &&
 		   newSplinePoint.X + offset.X <= max.X && newSplinePoint.Y + offset.Y <= max.Y && newSplinePoint.Z + offset.Z <= max.Z &&
-		   i < 50)
+		   i < 50)	// TODO: сделать проверку на зацикливание.
 	{
 		splineComponent->AddSplineLocalPoint(newSplinePoint * SizeMultipiler);
 		//splineComponent->SetSplinePointType(i + 1, ESplinePointType::Linear, true);		// TODO: check update arg.
@@ -213,9 +214,12 @@ void AFieldActor::_createSplinePoints(USplineComponent* splineComponent, float t
 			splineMeshComponent = NewObject<USplineMeshComponent>(this);
 
 		FVector oldSplinePoint = splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local) / SizeMultipiler + offset;
-		float meshLength = (newSplinePoint + offset - oldSplinePoint).Size() * SizeMultipiler;
+		FVector direction = newSplinePoint + offset - oldSplinePoint;	// Includes length.
+		FRotator rotation = UKismetMathLibrary::MakeRotFromX(newSplinePoint + offset - oldSplinePoint);
+		rotation.Pitch += 90;
+		float meshLength = (direction).Size() * SizeMultipiler;
 		FVector scale = (FVector(0.01 * SplineThickness, 0.01 * SplineThickness, 0.01 * meshLength)) / SizeMultipiler;	// Scale в 1 (для куба 100^3).
-		SplineInstancedMesh->AddInstance(FTransform(FRotator(0, 0, 0), (newSplinePoint + offset), scale));
+		SplineInstancedMesh->AddInstance(FTransform(rotation, (newSplinePoint + offset), scale));
 
 		/*splineMeshComponent->SetStaticMesh(SplineMesh);
 		splineMeshComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
