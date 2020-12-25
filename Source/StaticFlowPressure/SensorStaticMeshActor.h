@@ -24,10 +24,13 @@ class STATICFLOWPRESSURE_API AFieldActor : public AActor
 public:
 	AFieldActor();
 
+	UMaterialInstanceDynamic* VectorMaterial;
 	UInstancedStaticMeshComponent* VectorInstancedMesh;
+
 	UPROPERTY(EditAnywhere, Category = "Vector calculation")
 		UStaticMesh* VectorMesh;
 
+	UMaterialInstanceDynamic* SplineMaterial;
 	UInstancedStaticMeshComponent* SplineInstancedMesh;
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
 		UStaticMesh* SplineMesh;
@@ -38,10 +41,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
 		float SplineCalcStep = 0.2;
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void UpdateSplinePoints(bool isContinue = false);
-
-	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		float SimulationTime = 0;
+		void UpdateSpline(bool isContinue = false);
 
 	//UPROPERTY(EditAnywhere, Category = "Spline calculation")
 		TArray<USplineComponent*> SplineComponents = TArray<USplineComponent*>();
@@ -66,6 +66,10 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "General calculation", DisplayName = "Field size (multipiler)")
 		float SizeMultipiler = 200;
+	UPROPERTY(EditAnywhere, Category = "General calculation")
+		float Epsilon = 1;
+	UPROPERTY(EditAnywhere, Category = "General calculation")
+		float SimulationTime = 0;
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
@@ -75,7 +79,7 @@ public:
 
 	void OnConstruction(const FTransform& transform) override;
 
-	void SetSplinesStart(FVector startPosition, FIntVector resolution);
+	void SetSplinesStart(TArray<FVector> locations);
 
 protected:
 
@@ -85,6 +89,7 @@ protected:
 
 	// Нужно ли проверить на WITH_EDITOR?
 	virtual void PostLoad() override;
+	virtual void PostActorCreated() override;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent & propertyChangedEvent) override; 
@@ -94,9 +99,11 @@ protected:
 
 	milliseconds _time();	// for deubg;
 
-	void _removeField();
-
 	int _createSensorInstancedMesh(FVector location);
 
 	void _createSplinePoints(USplineComponent* splineComponent, bool isContinue = false);
+
+	void _updateMaterialParameters(UMaterialInstanceDynamic* material);
+
+	void _initVisualisation();
 };
