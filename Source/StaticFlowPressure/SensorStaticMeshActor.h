@@ -7,6 +7,8 @@
 #include "Components/SplineComponent.h"
 #include "Components\SplineMeshComponent.h"
 #include "CoreMinimal.h"
+#include <chrono>	// foor debug
+using namespace std::chrono;
 //#include "Engine/StaticMeshActor.h"
 #include "GameFramework/Actor.h"
 #include "SensorStaticMeshActor.generated.h"
@@ -25,7 +27,7 @@ public:
 	UInstancedStaticMeshComponent* VectorInstancedMesh;
 	UPROPERTY(EditAnywhere, Category = "Vector calculation")
 		UStaticMesh* VectorMesh;
-	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+
 	UInstancedStaticMeshComponent* SplineInstancedMesh;
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
 		UStaticMesh* SplineMesh;
@@ -34,28 +36,33 @@ public:
 		float SplineThickness = 5;
 
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		float SplineCalcStep = 0.3;
+		float SplineCalcStep = 0.2;
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void UpdateSplinePoints();
+		void UpdateSplinePoints(bool isContinue = false);
 
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		float SimulationTime;
+		float SimulationTime = 0;
 
-	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+	//UPROPERTY(EditAnywhere, Category = "Spline calculation")
 		TArray<USplineComponent*> SplineComponents = TArray<USplineComponent*>();
 
 
 	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vector field resolution (number of sensors by axis)")
-		FVector VectorFieldResolution = FVector(40, 40, 40);
+		FIntVector VectorFieldResolution = FIntVector(40, 40, 40);
 
 	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Spline resolution (number of splines by axis)")
-		FVector SplineResolution = FVector(25, 25, 1);	// TODO: переделать через плотность.
+		FIntVector SplineResolution = FIntVector(20, 20, 1);	// TODO: переделать через плотность.
 
 	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vectors size (multipiler)")
-		float SensorMeshRadiusMultipiler = 0.25;
+		float VectorMeshRadiusMultipiler = 0.5;
 
 	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Show vector field")
 		bool IsShowVectors = true;
+
+	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Show splines")
+		bool IsShowSplines = true;
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		int SplinePointsLimit = 500;
 
 	UPROPERTY(EditAnywhere, Category = "General calculation", DisplayName = "Field size (multipiler)")
 		float SizeMultipiler = 200;
@@ -68,7 +75,11 @@ public:
 
 	void OnConstruction(const FTransform& transform) override;
 
+	void SetSplinesStart(FVector startPosition, FIntVector resolution);
+
 protected:
+
+	FCriticalSection _mutex;// = FWindowsCriticalSection();	// For parallel calc.
 
 	Calculator* _calculator = new PaperTest();
 
@@ -81,9 +92,11 @@ protected:
 
 	void _createField();
 
+	milliseconds _time();	// for deubg;
+
 	void _removeField();
 
 	int _createSensorInstancedMesh(FVector location);
 
-	void _createSplinePoints(USplineComponent* splineComponent, float time, bool isConstructorCall = true);
+	void _createSplinePoints(USplineComponent* splineComponent, bool isContinue = false);
 };

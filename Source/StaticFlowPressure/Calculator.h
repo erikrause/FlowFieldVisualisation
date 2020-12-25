@@ -34,9 +34,9 @@ public:
 	static double sigmoid(double x);
 	virtual FVector calc_vel(double time, double x, double y, double z) = 0;
 	virtual double calc_pres(double time, double x, double y, double z, FVector vel) = 0;
-	TArray<FVector> CalculateLocations(FVector resolution, bool isApplyBias = true);
+	TArray<FVector> CalculateLocations(FIntVector resolution, bool isApplyBias = true);
 	TArray<FVector> CalculateFlatLocations(float xRes, float yRes, bool isApplyBias = true);
-	FVector GetDistanceBetweenSensors(FVector resolution);
+	FVector GetDistanceBetweenSensors(FIntVector resolution);
 
 	const FVector LowerLimits = FVector(1, 1, 1);		// A
 	const FVector UpperLimits = FVector(6, 6, 6);		// B

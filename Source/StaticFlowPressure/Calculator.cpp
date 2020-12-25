@@ -158,7 +158,7 @@ double Calculation::calc_pres(double time, double x, double y, double z)//поле д
 /// elements of resolution must be > 1.
 /// isApplyBias - применить смещнеие. Если false - то точки будут в диапазоне [0, 1].
 /// 
-TArray<FVector> Calculator::CalculateLocations(FVector resolution, bool isApplyBias)
+TArray<FVector> Calculator::CalculateLocations(FIntVector resolution, bool isApplyBias)
 {
     // Проверка, если одна из осей <= 1 (костыль, TODO):
     FVector axisMask = FVector(1, 1, 1);
@@ -204,7 +204,7 @@ TArray<FVector> Calculator::CalculateLocations(FVector resolution, bool isApplyB
     return locations;
 }
 
-TArray<FVector> Calculator::CalculateFlatLocations(float xRes, float yRes, bool isApplyBias)
+TArray<FVector> Calculator::CalculateFlatLocations(float xRes, float yRes, bool isApplyBias)    // TODO: FIntVector arg.
 {
     TArray<FVector> locations = TArray<FVector>();
 
@@ -232,7 +232,7 @@ TArray<FVector> Calculator::CalculateFlatLocations(float xRes, float yRes, bool 
     return locations;
 }
 
-FVector Calculator::GetDistanceBetweenSensors(FVector resolution)
+FVector Calculator::GetDistanceBetweenSensors(FIntVector resolution)
 {
     /*int num_p_along_x = scale;
     return ((B - A) * (double)2 / (double)(num_p_along_x - 1) + A) -
