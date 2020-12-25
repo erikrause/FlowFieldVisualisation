@@ -2,39 +2,69 @@
 
 #pragma once
 
-#include "Calculation.h"
+#include "Calculator.h"
+#include "PaperTest.h"
 #include "Components/SplineComponent.h"
+#include "Components\SplineMeshComponent.h"
 #include "CoreMinimal.h"
-#include "Engine/StaticMeshActor.h"
+#include <chrono>	// foor debug
+using namespace std::chrono;
+//#include "Engine/StaticMeshActor.h"
+#include "GameFramework/Actor.h"
 #include "SensorStaticMeshActor.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class STATICFLOWPRESSURE_API ASensorStaticMeshActor : public AStaticMeshActor
+class STATICFLOWPRESSURE_API AFieldActor : public AActor
 {
 	GENERATED_BODY()
 	
 public:
-	ASensorStaticMeshActor();
+	AFieldActor();
 
-	UPROPERTY(EditAnywhere, Category = "Calculation")
+	UInstancedStaticMeshComponent* VectorInstancedMesh;
+	UPROPERTY(EditAnywhere, Category = "Vector calculation")
 		UStaticMesh* VectorMesh;
 
-	UInstancedStaticMeshComponent* InstancedMesh;
-	USplineComponent* SplineComponent;
+	UInstancedStaticMeshComponent* SplineInstancedMesh;
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		UStaticMesh* SplineMesh;
 
-	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Resolution (number of sensors by axis)")
-		FVector Resolution = FVector(40, 40, 40);
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		float SplineThickness = 5;
 
-	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Vectors size (multipiler)")
-		float SensorMeshRadiusMultipiler = 0.25;
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		float SplineCalcStep = 0.2;
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		void UpdateSplinePoints(bool isContinue = false);
 
-	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Show vector field")
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		float SimulationTime = 0;
+
+	//UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		TArray<USplineComponent*> SplineComponents = TArray<USplineComponent*>();
+
+
+	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vector field resolution (number of sensors by axis)")
+		FIntVector VectorFieldResolution = FIntVector(40, 40, 40);
+
+	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Spline resolution (number of splines by axis)")
+		FIntVector SplineResolution = FIntVector(20, 20, 1);	// TODO: переделать через плотность.
+
+	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vectors size (multipiler)")
+		float VectorMeshRadiusMultipiler = 0.5;
+
+	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Show vector field")
 		bool IsShowVectors = true;
 
-	UPROPERTY(EditAnywhere, Category = "Calculation", DisplayName = "Vector field size (multipiler)")
+	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Show splines")
+		bool IsShowSplines = true;
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		int SplinePointsLimit = 500;
+
+	UPROPERTY(EditAnywhere, Category = "General calculation", DisplayName = "Field size (multipiler)")
 		float SizeMultipiler = 200;
 
 	virtual void BeginPlay() override;
@@ -45,10 +75,16 @@ public:
 
 	void OnConstruction(const FTransform& transform) override;
 
+	void SetSplinesStart(FVector startPosition, FIntVector resolution);
+
 protected:
 
+	FCriticalSection _mutex;// = FWindowsCriticalSection();	// For parallel calc.
+
+	Calculator* _calculator = new PaperTest();
+
 	// Ќужно ли проверить на WITH_EDITOR?
-	//virtual void PostLoad() override;
+	virtual void PostLoad() override;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent & propertyChangedEvent) override; 
@@ -56,9 +92,11 @@ protected:
 
 	void _createField();
 
+	milliseconds _time();	// for deubg;
+
 	void _removeField();
 
-	int _createSensorInstancedMesh(FVector* location);
+	int _createSensorInstancedMesh(FVector location);
 
-	FVector* _scalarMultiply(FVector* vector, float multipiler);
+	void _createSplinePoints(USplineComponent* splineComponent, bool isContinue = false);
 };

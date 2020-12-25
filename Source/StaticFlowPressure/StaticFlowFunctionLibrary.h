@@ -19,5 +19,5 @@ class STATICFLOWPRESSURE_API UStaticFlowFunctionLibrary : public UBlueprintFunct
 	UStaticFlowFunctionLibrary();
 
 	UFUNCTION(BlueprintCallable, Category = "StaticFlowLibrary", meta = (WorldContext = "WorldContextObject"))
-	static TMap<FVector, ASensorStaticMeshActor*> CreateSensors(UObject* WorldContextObject, FVector& scale);
+	static TMap<FVector, AFieldActor*> CreateSensors(UObject* WorldContextObject, FVector& scale);
 };

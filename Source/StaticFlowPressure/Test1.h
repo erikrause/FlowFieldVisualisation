@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Calculation.h"
+#include "Calculator.h"
 #include "CoreMinimal.h"
 
 /**
@@ -15,6 +15,6 @@ public:
 	~Test1();
 	
 	// Унаследовано через Calculator
-	virtual double calc_vel(double time, double x, double y, double z, int coor) override;
-	virtual double calc_pres(double time, double x, double y, double z) override;
+	virtual FVector calc_vel(double time, double x, double y, double z) override;
+	virtual double calc_pres(double time, double x, double y, double z, FVector vel) override;
 };

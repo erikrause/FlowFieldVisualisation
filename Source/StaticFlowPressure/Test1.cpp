@@ -11,16 +11,24 @@ Test1::~Test1()
 {
 }
 
-double Test1::calc_vel(double time, double x, double y, double z, int coor)
+FVector Test1::calc_vel(double time, double x, double y, double z)
 {
+    /*
     std::map<int, std::function<double()>> coorMap;
     coorMap[0] = [&]() { return exp(-epsilon * time) * cos(y); };
     coorMap[1] = [&]() { return -exp(-epsilon * time) * cos(x); };
     
-    return coorMap[coor]();
+    return coorMap[coor]();*/
+
+    FVector vector = FVector();
+    vector.X = exp(-epsilon * time) * cos(y);
+    vector.Y = -exp(-epsilon * time) * cos(x);
+    vector.Z = 0;
+
+    return vector;
 }
 
-double Test1::calc_pres(double time, double x, double y, double z)
+double Test1::calc_pres(double time, double x, double y, double z, FVector vel)
 {
     /* DEBUG:
     double prob1 = exp(-2 * epsilon * time);
