@@ -13,6 +13,23 @@ using namespace std::chrono;
 #include "GameFramework/Actor.h"
 #include "SensorStaticMeshActor.generated.h"
 
+
+struct Spline
+{
+public:
+	Spline(USplineComponent* splineComponent, TArray<int> particleIds)
+	{
+		Component = splineComponent;
+		ParticleIds = particleIds;
+	}
+	USplineComponent* Component;
+
+	/// <summary>
+	/// Частицы, принадлежащие этому сплайну.
+	/// </summary>
+	TArray<int> ParticleIds;
+};
+
 /**
  * 
  */
@@ -26,6 +43,14 @@ public:
 
 	UMaterialInstanceDynamic* VectorMaterial;
 	UInstancedStaticMeshComponent* VectorInstancedMesh;
+
+	UInstancedStaticMeshComponent* ParticleInstancedMesh;	// частица, движущаяся по сплайну.
+
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		UStaticMesh* ParticleMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		float ParticleSize = 15;
 
 	UPROPERTY(EditAnywhere, Category = "Vector calculation")
 		UStaticMesh* VectorMesh;
@@ -44,7 +69,8 @@ public:
 		void UpdateSpline(bool isContinue = false);
 
 	//UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		TArray<USplineComponent*> SplineComponents = TArray<USplineComponent*>();
+		TArray<Spline*> Splines = TArray<Spline*>();
+		//TMap < USplineComponent*, TArray<int>> prob = TMap < USplineComponent*, TArray<int>>();
 
 
 	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vector field resolution (number of sensors by axis)")
@@ -72,7 +98,7 @@ public:
 		float SimulationTime = 0;
 
 	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaSeconds) override;
+	virtual void Tick(float deltaSeconds) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Events")
 		void OnButtonPressed();
@@ -80,6 +106,8 @@ public:
 	void OnConstruction(const FTransform& transform) override;
 
 	void SetSplinesStart(TArray<FVector> locations);
+
+	void SetSimulationTime(float newTime);
 
 protected:
 
@@ -106,4 +134,13 @@ protected:
 	void _updateMaterialParameters(UMaterialInstanceDynamic* material);
 
 	void _initVisualisation();
+
+	/// <summary>
+	/// Обновляет позиции частиц на сплайнах.
+	/// </summary>
+	void _updateSplineParticles(float deltaTime);
+
+	float _particleTimeCounter = 0;
+
+	void _addParticlesToStartPoint();
 };

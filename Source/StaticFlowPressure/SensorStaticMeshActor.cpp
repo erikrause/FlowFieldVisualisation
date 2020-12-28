@@ -22,8 +22,8 @@ AFieldActor::AFieldActor()
 	VectorInstancedMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
 	// Set mesh asset:
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> VectorAsset(TEXT("/Game/Arrow.Arrow"));
-	VectorMesh = VectorAsset.Object;
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> vectorAsset(TEXT("/Game/Arrow.Arrow"));
+	VectorMesh = vectorAsset.Object;
 	VectorInstancedMesh->SetStaticMesh(VectorMesh);
 	// Set material:
 	static ConstructorHelpers::FObjectFinder<UMaterial> vectorMaterialAsset(TEXT("Material'/Game/SensorMaterial.SensorMaterial'"));
@@ -56,14 +56,33 @@ AFieldActor::AFieldActor()
 	SplineInstancedMesh->SetRenderCustomDepth(true);
 
 	// Set mesh asset:
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> SplineAsset(TEXT("/Game/SplineMesh.SplineMesh"));
-	SplineMesh = SplineAsset.Object;
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> splineAsset(TEXT("/Game/SplineMesh.SplineMesh"));
+	SplineMesh = splineAsset.Object;
 	SplineInstancedMesh->SetStaticMesh(SplineMesh);
 	// Set material:
 	static ConstructorHelpers::FObjectFinder<UMaterial> splineMaterialAsset(TEXT("Material'/Game/SplineMaterial.SplineMaterial'"));
 	SplineMaterial = UMaterialInstanceDynamic::Create(splineMaterialAsset.Object, this, FName("SplineMatreial"));
 	_updateMaterialParameters(SplineMaterial);
 	SplineInstancedMesh->SetMaterial(0, SplineMaterial);
+
+	#pragma endregion
+
+	#pragma region Creating particles on splines
+
+	ParticleInstancedMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*FString("ParticleInstancedMesh"));
+	ParticleInstancedMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	ParticleInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
+
+	// Оптимизации
+	ParticleInstancedMesh->SetCollisionProfileName(FName("NoCollision"), false);
+	ParticleInstancedMesh->SetCastShadow(false);
+	ParticleInstancedMesh->SetLightAttachmentsAsGroup(true);
+	ParticleInstancedMesh->SetRenderCustomDepth(true);
+
+	// Set mesh asset:
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> splineParticleAsset(TEXT("/Game/SplineParticleMesh.SplineParticleMesh"));
+	ParticleMesh = splineParticleAsset.Object;
+	ParticleInstancedMesh->SetStaticMesh(ParticleMesh);
 
 	#pragma endregion
 }
@@ -74,6 +93,13 @@ AFieldActor::AFieldActor()
 /// <param name="locations"></param>
 void AFieldActor::SetSplinesStart(TArray<FVector> locations)
 {
+	for (Spline* spline : Splines)
+	{
+		spline->Component->DestroyComponent();
+		// TODO: destroy particle instances.
+	}
+	Splines.Empty();
+
 	int componentCounter = 0;	// Needs for naming.
 
 	for (FVector location : locations)
@@ -86,9 +112,37 @@ void AFieldActor::SetSplinesStart(TArray<FVector> locations)
 		splineComponent->SetRelativeLocation(location * SizeMultipiler);		// TODO: refactor location size multipiler.
 		splineComponent->SetDrawDebug(false);
 		splineComponent->LDMaxDrawDistance = 0;
-		SplineComponents.Add(splineComponent);
+		Splines.Add(new Spline(splineComponent, TArray<int>()));
 
 		componentCounter++;
+	}
+}
+
+void AFieldActor::SetSimulationTime(float newTime)	// переделать
+{
+	SimulationTime = newTime;
+
+	_updateMaterialParameters(VectorMaterial);
+	_updateMaterialParameters(SplineMaterial);
+
+	SplineInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
+
+	for (Spline* spline : Splines)		// TODO: убрать SizeMultipiler changing event отдельно (менять только RelativeScale компонентов).
+	{
+		spline->Component->DestroyComponent();
+	}
+	Splines.Empty();
+	ParticleInstancedMesh->ClearInstances();
+	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y);
+	SetSplinesStart(locations);
+
+	if (IsShowSplines)
+	{
+		UpdateSpline();
+	}
+	if (IsShowVectors)
+	{
+		_createField();
 	}
 }
 
@@ -118,14 +172,14 @@ void AFieldActor::OnConstruction(const FTransform& transform)
 	#pragma endregion
 }
 
-void AFieldActor::PostLoad()
+void AFieldActor::PostLoad()	// Вызывается при загрузке.
 {
 	Super::PostLoad();
 
 	_initVisualisation();
 }
 
-void AFieldActor::PostActorCreated()
+void AFieldActor::PostActorCreated()	// Вызывается при созданни в редакторе или запуске мира.
 {
 	Super::PostActorCreated();
 
@@ -134,6 +188,11 @@ void AFieldActor::PostActorCreated()
 
 void AFieldActor::_initVisualisation()
 {
+	VectorInstancedMesh->ClearInstances();
+	SplineInstancedMesh->ClearInstances();
+	ParticleInstancedMesh->ClearInstances();
+
+
 	if (IsShowVectors) // TODO: переместить в конструктор и PostLoad.
 	{
 		_createField();
@@ -155,6 +214,52 @@ void AFieldActor::_initVisualisation()
 		{
 			SplineInstancedMesh->SetStaticMesh(SplineMesh);
 		}
+
+		_addParticlesToStartPoint();
+	}
+}
+
+void AFieldActor::_updateSplineParticles(float deltaTime)
+{
+	//int instancesNum = ParticleInstancedMesh->GetInstanceCount();
+
+	FVector min = _calculator->LowerLimits;
+	FVector max = _calculator->UpperLimits;
+
+	for (Spline* spline : Splines)
+	{
+		for (int particleId : spline->ParticleIds)
+		{
+			FTransform particleTransform = FTransform();
+			ParticleInstancedMesh->GetInstanceTransform(particleId, particleTransform);
+			FVector oldParticleLocation = particleTransform.GetLocation();
+			// TODO: изменить по дистации на сплайне. Временное решение:
+			FVector particleVelocity = _calculator->calc_vel(SimulationTime, oldParticleLocation.X, oldParticleLocation.Y, oldParticleLocation.Z);
+			FVector newParticleLocation = oldParticleLocation + particleVelocity * deltaTime;
+
+			// Проверка на то, что частица в границах куба:
+			if (newParticleLocation.X > min.X && newParticleLocation.Y > min.Y && newParticleLocation.Z > min.Z &&
+				newParticleLocation.X < max.X && newParticleLocation.Y < max.Y && newParticleLocation.Z < max.Z)
+			{
+				particleTransform.SetLocation(newParticleLocation);
+				ParticleInstancedMesh->UpdateInstanceTransform(particleId, particleTransform);
+			}
+			else 
+			{
+				ParticleInstancedMesh->RemoveInstance(particleId);
+			}
+		}
+	}
+	ParticleInstancedMesh->MarkRenderStateDirty();		// Отрендерить изменения.
+}
+
+void AFieldActor::_addParticlesToStartPoint()
+{
+	// Init spline particles:
+	for (Spline* spline : Splines)
+	{
+		int id = ParticleInstancedMesh->AddInstance(FTransform(FRotator(0, 0, 0), spline->Component->GetRelativeLocation() / SizeMultipiler, FVector(0.01, 0.01, 0.01) * ParticleSize / SizeMultipiler));
+		spline->ParticleIds.Add(id);
 	}
 }
 
@@ -195,11 +300,6 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 	}
 	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplineResolution))
 	{
-		for (USplineComponent* splineComponent : SplineComponents)
-		{
-			splineComponent->DestroyComponent();
-		}
-		SplineComponents.Empty();
 		TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y);
 		SetSplinesStart(locations);
 		UpdateSpline();
@@ -229,11 +329,11 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 
 		SplineInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
 
-		for (USplineComponent* splineComponent : SplineComponents)		// TODO: убрать SizeMultipiler changing event отдельно (менять только RelativeScale компонентов).
+		for (Spline* spline : Splines)		// TODO: убрать SizeMultipiler changing event отдельно (менять только RelativeScale компонентов).
 		{
-			splineComponent->DestroyComponent();
+			spline->Component->DestroyComponent();
 		}
-		SplineComponents.Empty();
+		Splines.Empty();
 		TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y);
 		SetSplinesStart(locations);
 
@@ -400,21 +500,25 @@ void AFieldActor::UpdateSpline(bool isContinue)
 {
 	SplineInstancedMesh->ClearInstances();
 
+	// TODO: распараллелить! Пока закоментировал из-за TMap (может сделать TArray<struct>?
 	// Update curve:
-	ParallelFor(SplineComponents.Num(), [this, isContinue](int32 i)
+	/*ParallelFor(SplineComponentsMap.Num(), [this, isContinue](int32 i)
 	{
 		_createSplinePoints(SplineComponents[i], isContinue);
-	}, EParallelForFlags::ForceSingleThread);
+	}, EParallelForFlags::ForceSingleThread);*/
 
 	// Add mesh to curve:
-	for (USplineComponent* splineComponent : SplineComponents)
+	for (Spline* spline : Splines)
 	{
-		FVector offset = splineComponent->GetRelativeLocation() / SizeMultipiler;
+		_createSplinePoints(spline->Component, isContinue);
+		//auto prob = spline.Component->GetLocationAtDistanceAlongSpline(1, ESplineCoordinateSpace::Local);
 
-		for (int pointIndex = 1; pointIndex < splineComponent->GetNumberOfSplinePoints(); pointIndex++)
+		FVector offset = spline->Component->GetRelativeLocation() / SizeMultipiler;
+
+		for (int pointIndex = 1; pointIndex < spline->Component->GetNumberOfSplinePoints(); pointIndex++)
 		{
-			FVector startPoint = splineComponent->GetLocationAtSplinePoint(pointIndex - 1, ESplineCoordinateSpace::Local) / SizeMultipiler + offset;
-			FVector endPoint = splineComponent->GetLocationAtSplinePoint(pointIndex, ESplineCoordinateSpace::Local) / SizeMultipiler + offset;
+			FVector startPoint = spline->Component->GetLocationAtSplinePoint(pointIndex - 1, ESplineCoordinateSpace::Local) / SizeMultipiler + offset;
+			FVector endPoint = spline->Component->GetLocationAtSplinePoint(pointIndex, ESplineCoordinateSpace::Local) / SizeMultipiler + offset;
 
 			FVector direction = endPoint - startPoint;	// Includes length.
 			FRotator rotation = UKismetMathLibrary::MakeRotFromX(endPoint - startPoint);
@@ -429,9 +533,9 @@ void AFieldActor::UpdateSpline(bool isContinue)
 	}
 
 	/*
-	for (USplineComponent* splineComponent : SplineComponents)
+	for (USplineComponent* spline.Component : SplineComponents)
 	{
-		_createSplinePoints(splineComponent, 0);
+		_createSplinePoints(spline.Component, 0);
 	}*/
 	int prob = 0;
 }
@@ -444,10 +548,27 @@ void AFieldActor::BeginPlay()
 	//_updateSensors();
 }
 
-void AFieldActor::Tick(float DeltaSeconds)
+void AFieldActor::Tick(float deltaSeconds)
 {
-	Super::Tick(DeltaSeconds);
+	Super::Tick(deltaSeconds);
 
+	SimulationTime += deltaSeconds;
+	_updateMaterialParameters(VectorMaterial);
+	_updateMaterialParameters(SplineMaterial);
+
+	_particleTimeCounter += deltaSeconds;
+	_updateSplineParticles(deltaSeconds);
+
+	if (_particleTimeCounter > 1)
+	{
+		_particleTimeCounter = 0;
+		_addParticlesToStartPoint();
+	}
+
+	if (SimulationTime > 5)
+	{
+		SimulationTime = 0;
+	}
 	/*
 	if (_isStarted == true)
 	{
