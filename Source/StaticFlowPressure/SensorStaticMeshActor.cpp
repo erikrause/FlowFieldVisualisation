@@ -227,7 +227,9 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 		_updateMaterialParameters(VectorMaterial);
 		_updateMaterialParameters(SplineMaterial);
 
-		for (USplineComponent* splineComponent : SplineComponents)
+		SplineInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
+
+		for (USplineComponent* splineComponent : SplineComponents)		// TODO: убрать SizeMultipiler changing event отдельно (менять только RelativeScale компонентов).
 		{
 			splineComponent->DestroyComponent();
 		}
@@ -288,7 +290,6 @@ int AFieldActor::_createSensorInstancedMesh(FVector location)
 /// Создаст линию тока по точкам, рассчитанным из скорости в t0. Удалит splineComponent из массива класса, если num of points = 1.
 /// </summary>
 /// <param name="splineComponent"></param>
-/// <param name="time"> t0 </param>
 /// <param name="isContinue"> Продолжить сплайн </param>
 void AFieldActor::_createSplinePoints(USplineComponent* splineComponent, bool isContinue)
 {
@@ -459,6 +460,8 @@ void AFieldActor::OnButtonPressed()
 {
 	//_isStarted = true;
 }
+
+// DEPRECECATED:
 
 /*
 void ASensorStaticMeshActor::_updateSensors()
