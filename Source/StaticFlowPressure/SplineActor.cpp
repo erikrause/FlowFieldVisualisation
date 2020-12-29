@@ -64,6 +64,7 @@ void ASplineActor::OnConstruction(const FTransform& Transform)
 #pragma endregion
 }
 
+#if WITH_EDITOR
 void ASplineActor::PostEditChangeProperty(FPropertyChangedEvent& e)
 {
 	Super::PostEditChangeProperty(e);
@@ -79,6 +80,7 @@ void ASplineActor::PostEditChangeProperty(FPropertyChangedEvent& e)
 	// required for proper GC - this causes the mesh to get automatically destroyed when OnConstruction is re-run
 	//SplineComponent->CreationMethod = EComponentCreationMethod::UserConstructionScript;
 }
+#endif
 
 // Called when the game starts or when spawned
 void ASplineActor::BeginPlay()

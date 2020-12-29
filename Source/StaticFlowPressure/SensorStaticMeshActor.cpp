@@ -40,8 +40,10 @@ AFieldActor::AFieldActor()
 
 	#pragma endregion
 
+	#if WITH_EDITOR
 	FVector pivotOffset = (_calculator->UpperLimits + _calculator->LowerLimits) * SizeMultipiler / 2;
 	SetPivotOffset(pivotOffset);
+	#endif
 
 	#pragma region Creating splines
 
