@@ -166,7 +166,7 @@ void AFieldActor::SetSizeMultipiler(float sizeMultipiler)
 		spline->Component->DestroyComponent();
 	}
 	Splines.Empty();
-	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y);
+	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinePlane);
 	SetSplinesStart(locations);
 
 	if (IsShowSplines)
@@ -228,7 +228,7 @@ void AFieldActor::SetSplineResolution(FIntVector splineResolution)
 {
 	SplineResolution = splineResolution;
 
-	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y);
+	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinePlane);
 	SetSplinesStart(locations);
 	UpdateSpline();
 }
@@ -287,6 +287,14 @@ void AFieldActor::SetParticleSize(float particleSize)
 	ParticleInstancedMesh->MarkRenderStateDirty();
 
 	_addParticlesToStartPoint();
+}
+void AFieldActor::SetSplinesPlane(Plane newSplinePlane)
+{
+	SplinePlane = newSplinePlane;
+
+	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinePlane);
+	SetSplinesStart(locations);
+	UpdateSpline();
 }
 #pragma endregion
 
@@ -412,7 +420,7 @@ void AFieldActor::_initVisualisation()
 
 	if (IsShowSplines)
 	{
-		TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y);
+		TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinePlane);
 		SetSplinesStart(locations);
 
 		UpdateSpline();
@@ -548,6 +556,10 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, ParticleSize))
 	{
 		SetParticleSize(ParticleSize);
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplinePlane))
+	{
+		SetSplinesPlane(SplinePlane);
 	}
 }
 #endif

@@ -41,6 +41,8 @@ class STATICFLOWPRESSURE_API AFieldActor : public AActor
 public:
 	AFieldActor();
 
+	// TODO: refactoring - separate VectorField and Splines to components.
+
 	UMaterialInstanceDynamic* VectorMaterial;
 
 	UInstancedStaticMeshComponent* VectorInstancedMesh;
@@ -65,7 +67,7 @@ public:
 		float SplineThickness = 5;
 
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		float SplineCalcStep = 0.2;
+		float SplineCalcStep = 0.1;
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void UpdateSpline(bool isContinue = false);
 
@@ -77,6 +79,8 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Spline resolution (number of splines by axis)")
 		FIntVector SplineResolution = FIntVector(20, 20, 1);	// TODO: переделать через плотность.
+	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Splines start axis")
+		Plane SplinePlane = Plane::XY;
 
 	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vectors size (multipiler)")
 		float VectorMeshRadiusMultipiler = 0.5;
@@ -128,6 +132,8 @@ public:
 		void SetIsShowSplines(bool newIsShowSplines);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetParticleSize(float newParticleSize);
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		void SetSplinesPlane(Plane newSplinePlane);
 #pragma endregion
 
 #pragma region Getters for uproperties
