@@ -166,7 +166,7 @@ void AFieldActor::SetSizeMultipiler(float sizeMultipiler)
 		spline->Component->DestroyComponent();
 	}
 	Splines.Empty();
-	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinePlane);
+	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
 	SetSplinesStart(locations);
 
 	if (IsShowSplines)
@@ -228,7 +228,7 @@ void AFieldActor::SetSplineResolution(FIntVector splineResolution)
 {
 	SplineResolution = splineResolution;
 
-	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinePlane);
+	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
 	SetSplinesStart(locations);
 	UpdateSpline();
 }
@@ -290,10 +290,19 @@ void AFieldActor::SetParticleSize(float particleSize)
 }
 void AFieldActor::SetSplinesPlane(Plane newSplinePlane)
 {
-	SplinePlane = newSplinePlane;
+	SplinesPlane = newSplinePlane;
 
-	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinePlane);
+	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
 	SetSplinesStart(locations);
+	UpdateSpline();
+}
+void AFieldActor::SetIsOppositeSplinesPlane(bool newIsOppositePlane)
+{
+	IsOppositeSplinesPlane = newIsOppositePlane;
+
+	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
+	SetSplinesStart(locations);
+
 	UpdateSpline();
 }
 #pragma endregion
@@ -359,6 +368,14 @@ float AFieldActor::GetParticleSize()
 {
 	return ParticleSize;
 }
+Plane AFieldActor::GetSplinesPlane()
+{
+	return SplinesPlane;
+}
+bool AFieldActor::GetIsOppositeSplinesPlane()
+{
+	return IsOppositeSplinesPlane;
+}
 #pragma endregion
 
 void AFieldActor::OnConstruction(const FTransform& transform)
@@ -420,7 +437,7 @@ void AFieldActor::_initVisualisation()
 
 	if (IsShowSplines)
 	{
-		TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinePlane);
+		TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
 		SetSplinesStart(locations);
 
 		UpdateSpline();
@@ -557,9 +574,13 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 	{
 		SetParticleSize(ParticleSize);
 	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplinePlane))
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplinesPlane))
 	{
-		SetSplinesPlane(SplinePlane);
+		SetSplinesPlane(SplinesPlane);
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, IsOppositeSplinesPlane))
+	{
+		SetIsOppositeSplinesPlane(IsOppositeSplinesPlane);
 	}
 }
 #endif

@@ -43,7 +43,7 @@ public:
 	virtual FVector calc_vel(double time, double x, double y, double z) = 0;
 	virtual double calc_pres(double time, double x, double y, double z, FVector vel) = 0;
 	TArray<FVector> CalculateLocations(FIntVector resolution, bool isApplyBias = true);
-	TArray<FVector> CalculateFlatLocations(float firstAxisRes, float secondAxisRes, Plane plane, bool isApplyBias = true);
+	TArray<FVector> CalculateFlatLocations(float firstAxisRes, float secondAxisRes, Plane plane, bool isOppositePlane, bool isApplyBias = true);
 	FVector GetDistanceBetweenSensors(FIntVector resolution);
 
 	const FVector LowerLimits = FVector(1, 1, 1);		// A

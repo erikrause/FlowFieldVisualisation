@@ -80,7 +80,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Spline resolution (number of splines by axis)")
 		FIntVector SplineResolution = FIntVector(20, 20, 1);	// TODO: переделать через плотность.
 	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Splines start axis")
-		Plane SplinePlane = Plane::XY;
+		Plane SplinesPlane = Plane::XY;
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		bool IsOppositeSplinesPlane = false;
 
 	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vectors size (multipiler)")
 		float VectorMeshRadiusMultipiler = 0.5;
@@ -134,6 +136,8 @@ public:
 		void SetParticleSize(float newParticleSize);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetSplinesPlane(Plane newSplinePlane);
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		void SetIsOppositeSplinesPlane(bool newIsOppositePlane);
 #pragma endregion
 
 #pragma region Getters for uproperties
@@ -161,6 +165,10 @@ public:
 		bool GetIsShowSplines();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		float GetParticleSize();
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		Plane GetSplinesPlane();
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		bool GetIsOppositeSplinesPlane();
 #pragma endregion
 
 protected:
