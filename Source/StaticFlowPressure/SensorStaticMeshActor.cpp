@@ -28,7 +28,6 @@ AFieldActor::AFieldActor()
 	// Set material:
 	static ConstructorHelpers::FObjectFinder<UMaterial> vectorMaterialAsset(TEXT("Material'/Game/SensorMaterial.SensorMaterial'"));
 	VectorMaterial = UMaterialInstanceDynamic::Create(vectorMaterialAsset.Object, this, FName("VectorMatreial"));
-	_updateMaterialParameters(VectorMaterial);
 	VectorInstancedMesh->SetMaterial(0, VectorMaterial);
 
 	// Оптимизации:
@@ -64,7 +63,6 @@ AFieldActor::AFieldActor()
 	// Set material:
 	static ConstructorHelpers::FObjectFinder<UMaterial> splineMaterialAsset(TEXT("Material'/Game/SplineMaterial.SplineMaterial'"));
 	SplineMaterial = UMaterialInstanceDynamic::Create(splineMaterialAsset.Object, this, FName("SplineMatreial"));
-	_updateMaterialParameters(SplineMaterial);
 	SplineInstancedMesh->SetMaterial(0, SplineMaterial);
 
 	#pragma endregion
@@ -87,6 +85,14 @@ AFieldActor::AFieldActor()
 	ParticleInstancedMesh->SetStaticMesh(ParticleMesh);
 
 	#pragma endregion
+	
+	// Materials init:
+	VectorMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
+	SplineMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
+	VectorMaterial->SetScalarParameterValue(TEXT("epsilon"), Epsilon);
+	SplineMaterial->SetScalarParameterValue(TEXT("epsilon"), Epsilon);
+	VectorMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
+	SplineMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
 }
 
 /// <summary>
@@ -120,21 +126,44 @@ void AFieldActor::SetSplinesStart(TArray<FVector> locations)
 	}
 }
 
-void AFieldActor::SetSimulationTime(float newTime)	// переделать
+void AFieldActor::SetSimulationTime(float time)
 {
-	SimulationTime = newTime;
+	SimulationTime = time;
 
-	_updateMaterialParameters(VectorMaterial);
-	_updateMaterialParameters(SplineMaterial);
+	VectorMaterial->SetScalarParameterValue(TEXT("time"), SizeMultipiler);
+	SplineMaterial->SetScalarParameterValue(TEXT("time"), SizeMultipiler);
+}
 
-	SplineInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
+void AFieldActor::SetEpsilon(float epsilon)
+{
+	Epsilon = epsilon;
+
+	VectorMaterial->SetScalarParameterValue(TEXT("epsilon"), Epsilon);
+	SplineMaterial->SetScalarParameterValue(TEXT("epsilon"), Epsilon);
+
+	if (IsShowSplines)
+	{
+		UpdateSpline();
+	}
+	if (IsShowVectors)
+	{
+		_reCreateVecotrField();
+	}
+}
+
+void AFieldActor::SetSizeMultipiler(float sizeMultipiler)
+{
+	SizeMultipiler = sizeMultipiler;
+	VectorMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
+	SplineMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
+
+	SplineInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));		// TODO: refactoring with UpdateSpline().
 
 	for (Spline* spline : Splines)		// TODO: убрать SizeMultipiler changing event отдельно (менять только RelativeScale компонентов).
 	{
 		spline->Component->DestroyComponent();
 	}
 	Splines.Empty();
-	ParticleInstancedMesh->ClearInstances();
 	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y);
 	SetSplinesStart(locations);
 
@@ -144,8 +173,118 @@ void AFieldActor::SetSimulationTime(float newTime)	// переделать
 	}
 	if (IsShowVectors)
 	{
-		_createField();
+		_reCreateVecotrField();
 	}
+}
+
+void AFieldActor::SetVectorFieldResolution(FIntVector vectorFieldResolution)
+{
+	VectorFieldResolution = vectorFieldResolution;
+
+	if (IsShowVectors)
+	{
+		_reCreateVecotrField();
+	}
+}
+
+void AFieldActor::SetVectorMeshRadiusMultipiler(float vectorMeshRadiusMultipiler)
+{
+	VectorMeshRadiusMultipiler = vectorMeshRadiusMultipiler;
+
+	if (IsShowVectors)
+	{
+		_reCreateVecotrField();
+	}
+}
+
+void AFieldActor::SetIsShowVectors(bool isShowVectors)
+{
+	IsShowVectors = isShowVectors;
+
+	if (IsShowVectors)
+	{
+		_reCreateVecotrField();
+	}
+	else
+	{
+		VectorInstancedMesh->ClearInstances();
+	}
+	VectorInstancedMesh->MarkRenderStateDirty();	// for debug
+}
+
+void AFieldActor::SetSplinePointsLimit(int splinePointsLimit)
+{
+	SplinePointsLimit = splinePointsLimit;
+
+	if (IsShowSplines)
+	{
+		UpdateSpline(true);
+	}
+}
+
+void AFieldActor::SetSplineResolution(FIntVector splineResolution)
+{
+	SplineResolution = splineResolution;
+
+	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y);
+	SetSplinesStart(locations);
+	UpdateSpline();
+}
+
+void AFieldActor::SetSplineCalcStep(float splineCalcStep)
+{
+	if (splineCalcStep > 0)
+	{
+		SplineCalcStep = splineCalcStep;
+	}
+	else
+	{
+		SplineCalcStep = 0.01;
+	}
+
+	if (IsShowSplines)
+	{
+		UpdateSpline();
+	}
+}
+
+void AFieldActor::SetSplineThickness(float splineThickness)
+{
+	SplineThickness = splineThickness;
+
+	if (IsShowSplines)
+	{
+		UpdateSpline();
+	}
+}
+
+void AFieldActor::SetIsShowSplines(bool isShowSplines)
+{
+	IsShowSplines = isShowSplines;
+
+	if (IsShowSplines)
+	{
+		UpdateSpline();
+	}
+	else
+	{
+		SplineInstancedMesh->ClearInstances();
+	}
+}
+
+void AFieldActor::SetParticleSize(float particleSize)
+{
+	ParticleSize = particleSize;
+
+	for (int i = 0; i < ParticleInstancedMesh->GetInstanceCount(); i++)
+	{
+		FTransform transform = FTransform();
+		ParticleInstancedMesh->GetInstanceTransform(i, transform);
+		transform.SetScale3D(FVector(0.01, 0.01, 0.01) * ParticleSize / SizeMultipiler);
+	}
+	ParticleInstancedMesh->MarkRenderStateDirty();
+
+	_addParticlesToStartPoint();
 }
 
 void AFieldActor::OnConstruction(const FTransform& transform)
@@ -197,7 +336,7 @@ void AFieldActor::_initVisualisation()
 
 	if (IsShowVectors) // TODO: переместить в конструктор и PostLoad.
 	{
-		_createField();
+		_reCreateVecotrField();
 
 		if (VectorMesh != NULL)
 		{
@@ -228,8 +367,10 @@ void AFieldActor::_updateSplineParticles(float deltaTime)
 	FVector min = _calculator->LowerLimits;
 	FVector max = _calculator->UpperLimits;
 
-	for (Spline* spline : Splines)
+	ParallelFor(Splines.Num(), [this, deltaTime, min, max](int32 i)
 	{
+		Spline* spline = Splines[i];
+
 		for (int particleId : spline->ParticleIds)
 		{
 			FTransform particleTransform = FTransform();
@@ -241,17 +382,31 @@ void AFieldActor::_updateSplineParticles(float deltaTime)
 
 			// Проверка на то, что частица в границах куба:
 			if (newParticleLocation.X > min.X && newParticleLocation.Y > min.Y && newParticleLocation.Z > min.Z &&
-				newParticleLocation.X < max.X && newParticleLocation.Y < max.Y && newParticleLocation.Z < max.Z)
+				newParticleLocation.X < max.X && newParticleLocation.Y < max.Y && newParticleLocation.Z < max.Z)		// TODO: добавить проверку на particleVelocity.IsNearZero(); либо лимит на количество частиц.
 			{
+				if (particleId + 1 < spline->ParticleIds.Num())
+				{
+					FTransform nextParticleTransform = FTransform();
+					ParticleInstancedMesh->GetInstanceTransform(particleId, nextParticleTransform);
+					
+					if (nextParticleTransform.GetLocation() == newParticleLocation)
+					{
+						ParticleInstancedMesh->RemoveInstance(particleId + 1);		// Если эта частица догнала следующую, то удалить следующую.
+					}
+				}
 				particleTransform.SetLocation(newParticleLocation);
+				//_mutex.Lock();
 				ParticleInstancedMesh->UpdateInstanceTransform(particleId, particleTransform);
+				//_mutex.Unlock();
 			}
-			else 
+			else
 			{
+				//_mutex.Lock();
 				ParticleInstancedMesh->RemoveInstance(particleId);
+				//_mutex.Unlock();
 			}
 		}
-	}
+	}, EParallelForFlags::ForceSingleThread);		// TODO: сделать многопоток (проблемы с Remove из TArray).
 	ParticleInstancedMesh->MarkRenderStateDirty();		// Отрендерить изменения.
 }
 
@@ -276,18 +431,17 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 	{
 		VectorInstancedMesh->SetStaticMesh(VectorMesh);
 	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, VectorFieldResolution) ||
-			PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, VectorMeshRadiusMultipiler) ||
-			PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, IsShowVectors))
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, VectorFieldResolution))
 	{
-		if (IsShowVectors)
-		{
-			_createField();
-		}
-		else
-		{
-			VectorInstancedMesh->ClearInstances();
-		}
+		SetVectorFieldResolution(VectorFieldResolution);
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, VectorMeshRadiusMultipiler))
+	{
+		SetVectorMeshRadiusMultipiler(VectorMeshRadiusMultipiler);
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, IsShowVectors))
+	{
+		SetIsShowVectors(IsShowVectors);
 	}
 	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplineMesh))
 	{
@@ -295,63 +449,44 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 	}
 	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplinePointsLimit))
 	{
-		if (IsShowSplines)
-		{
-			UpdateSpline(true);
-		}
+		SetSplinePointsLimit(SplinePointsLimit);
 	}
 	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplineResolution))
 	{
-		TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y);
-		SetSplinesStart(locations);
-		UpdateSpline();
+		SetSplineResolution(SplineResolution);
 	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplineCalcStep) ||
-			 PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplineThickness) ||
-			 PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, IsShowSplines))
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplineCalcStep))
 	{
-		//_updateMaterialParameters(VectorMaterial);
-		//_updateMaterialParameters(SplineMaterial);
-
-		if (IsShowSplines)
-		{
-			UpdateSpline();
-		}
-		else
-		{
-			SplineInstancedMesh->ClearInstances();
-		}
+		SetSplineCalcStep(SplineCalcStep);
 	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SizeMultipiler) ||
-			 PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, Epsilon) ||
-			 PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SimulationTime))
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplineThickness))
 	{
-		_updateMaterialParameters(VectorMaterial);
-		_updateMaterialParameters(SplineMaterial);
-
-		SplineInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
-
-		for (Spline* spline : Splines)		// TODO: убрать SizeMultipiler changing event отдельно (менять только RelativeScale компонентов).
-		{
-			spline->Component->DestroyComponent();
-		}
-		Splines.Empty();
-		TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y);
-		SetSplinesStart(locations);
-
-		if (IsShowSplines)
-		{
-			UpdateSpline();
-		}
-		if (IsShowVectors)
-		{
-			_createField();
-		}
+		SetSplineThickness(SplineThickness);
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, IsShowSplines))
+	{
+		SetIsShowSplines(IsShowSplines);
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, Epsilon))
+	{
+		SetEpsilon(Epsilon);
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SizeMultipiler))
+	{
+		SetSizeMultipiler(SizeMultipiler);
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SimulationTime))
+	{
+		SetSimulationTime(SimulationTime);
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, ParticleSize))
+	{
+		SetParticleSize(ParticleSize);
 	}
 }
 #endif
 
-void AFieldActor::_createField()
+void AFieldActor::_reCreateVecotrField()
 {
 	VectorInstancedMesh->ClearInstances();
 
@@ -491,30 +626,19 @@ void AFieldActor::_createSplinePoints(USplineComponent* splineComponent, bool is
 	}*/
 }
 
-void AFieldActor::_updateMaterialParameters(UMaterialInstanceDynamic* material)
-{
-	material->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
-	material->SetScalarParameterValue(TEXT("epsilon"), Epsilon);
-	material->SetScalarParameterValue(TEXT("time"), SimulationTime);		// TODO: вынести time отдельно? Влиет ли на проиводительность дублирование scale и epsilon?
-}
-
 void AFieldActor::UpdateSpline(bool isContinue)
 {
 	SplineInstancedMesh->ClearInstances();
 
-	// TODO: распараллелить! Пока закоментировал из-за TMap (может сделать TArray<struct>?
 	// Update curve:
-	/*ParallelFor(SplineComponentsMap.Num(), [this, isContinue](int32 i)
+	ParallelFor(Splines.Num(), [this, isContinue](int32 i)
 	{
-		_createSplinePoints(SplineComponents[i], isContinue);
-	}, EParallelForFlags::ForceSingleThread);*/
+		_createSplinePoints(Splines[i]->Component, isContinue);
+	}, EParallelForFlags::None);
 
 	// Add mesh to curve:
 	for (Spline* spline : Splines)
 	{
-		_createSplinePoints(spline->Component, isContinue);
-		//auto prob = spline.Component->GetLocationAtDistanceAlongSpline(1, ESplineCoordinateSpace::Local);
-
 		FVector offset = spline->Component->GetRelativeLocation() / SizeMultipiler;
 
 		for (int pointIndex = 1; pointIndex < spline->Component->GetNumberOfSplinePoints(); pointIndex++)
@@ -528,35 +652,23 @@ void AFieldActor::UpdateSpline(bool isContinue)
 			float meshLength = (direction).Size() * SizeMultipiler;
 			FVector scale = (FVector(0.01 * SplineThickness, 0.01 * SplineThickness, 0.01 * meshLength)) / SizeMultipiler;	// Scale в 1 (для куба 100^3).
 
-			//_mutex.Lock();	// Для синхронизации параллельных потоков.
+			_mutex.Lock();	// Для синхронизации параллельных потоков.
 			SplineInstancedMesh->AddInstance(FTransform(rotation, (endPoint), scale));
-			//_mutex.Unlock();
+			_mutex.Unlock();
 		}
 	}
-
-	/*
-	for (USplineComponent* spline.Component : SplineComponents)
-	{
-		_createSplinePoints(spline.Component, 0);
-	}*/
-	int prob = 0;
 }
 
 void AFieldActor::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//_secondsCounter = 0.0;
-	//_updateSensors();
 }
 
 void AFieldActor::Tick(float deltaSeconds)
 {
 	Super::Tick(deltaSeconds);
 
-	SimulationTime += deltaSeconds;
-	_updateMaterialParameters(VectorMaterial);
-	_updateMaterialParameters(SplineMaterial);
+	SetSimulationTime(SimulationTime + deltaSeconds);
 
 	_particleTimeCounter += deltaSeconds;
 	_updateSplineParticles(deltaSeconds);
@@ -571,12 +683,6 @@ void AFieldActor::Tick(float deltaSeconds)
 	{
 		SimulationTime = 0;
 	}
-	/*
-	if (_isStarted == true)
-	{
-		_secondsCounter += DeltaSeconds;
-		_updateSensors();
-	}*/
 }
 
 void AFieldActor::OnButtonPressed()

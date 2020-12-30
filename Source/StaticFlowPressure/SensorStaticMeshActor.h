@@ -42,6 +42,7 @@ public:
 	AFieldActor();
 
 	UMaterialInstanceDynamic* VectorMaterial;
+
 	UInstancedStaticMeshComponent* VectorInstancedMesh;
 
 	UInstancedStaticMeshComponent* ParticleInstancedMesh;	// частица, движущаяся по сплайну.
@@ -68,13 +69,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void UpdateSpline(bool isContinue = false);
 
-	//UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		TArray<Spline*> Splines = TArray<Spline*>();
-		//TMap < USplineComponent*, TArray<int>> prob = TMap < USplineComponent*, TArray<int>>();
+	TArray<Spline*> Splines = TArray<Spline*>();
 
 
 	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vector field resolution (number of sensors by axis)")
-		FIntVector VectorFieldResolution = FIntVector(40, 40, 40);
+		FIntVector VectorFieldResolution = FIntVector(30, 30, 30);
 
 	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Spline resolution (number of splines by axis)")
 		FIntVector SplineResolution = FIntVector(20, 20, 1);	// TODO: переделать через плотность.
@@ -107,7 +106,19 @@ public:
 
 	void SetSplinesStart(TArray<FVector> locations);
 
-	void SetSimulationTime(float newTime);
+	// Setters for uproperties:
+	void SetSimulationTime(float time);
+	void SetEpsilon(float epsilon);
+	void SetSizeMultipiler(float sizeMultipiler);
+	void SetVectorFieldResolution(FIntVector vectorFieldResolution);
+	void SetVectorMeshRadiusMultipiler(float vectorMeshRadiusMultipiler);
+	void SetIsShowVectors(bool isShowVectors);
+	void SetSplinePointsLimit(int splinePointsLimit);
+	void SetSplineResolution(FIntVector splineResolution);
+	void SetSplineCalcStep(float splineCalcStep);
+	void SetSplineThickness(float splineThickness);
+	void SetIsShowSplines(bool isShowSplines);
+	void SetParticleSize(float particleSize);
 
 protected:
 
@@ -123,15 +134,13 @@ protected:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent & propertyChangedEvent) override; 
 #endif
 
-	void _createField();
+	void _reCreateVecotrField();
 
 	milliseconds _time();	// for deubg;
 
 	int _createSensorInstancedMesh(FVector location);
 
 	void _createSplinePoints(USplineComponent* splineComponent, bool isContinue = false);
-
-	void _updateMaterialParameters(UMaterialInstanceDynamic* material);
 
 	void _initVisualisation();
 
@@ -143,4 +152,6 @@ protected:
 	float _particleTimeCounter = 0;
 
 	void _addParticlesToStartPoint();
+
+	void _updateMaterialParameters(UMaterialInstanceDynamic* vectorMaterial);
 };
