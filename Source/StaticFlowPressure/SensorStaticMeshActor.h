@@ -99,26 +99,63 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float deltaSeconds) override;
 
-	UFUNCTION(BlueprintCallable, Category = "Events")
-		void OnButtonPressed();
-
 	void OnConstruction(const FTransform& transform) override;
 
 	void SetSplinesStart(TArray<FVector> locations);
 
-	// Setters for uproperties:
-	void SetSimulationTime(float time);
-	void SetEpsilon(float epsilon);
-	void SetSizeMultipiler(float sizeMultipiler);
-	void SetVectorFieldResolution(FIntVector vectorFieldResolution);
-	void SetVectorMeshRadiusMultipiler(float vectorMeshRadiusMultipiler);
-	void SetIsShowVectors(bool isShowVectors);
-	void SetSplinePointsLimit(int splinePointsLimit);
-	void SetSplineResolution(FIntVector splineResolution);
-	void SetSplineCalcStep(float splineCalcStep);
-	void SetSplineThickness(float splineThickness);
-	void SetIsShowSplines(bool isShowSplines);
-	void SetParticleSize(float particleSize);
+#pragma region Setters for uproperties
+	UFUNCTION(BlueprintCallable, Category = "General calculation")
+		void SetSimulationTime(float time);
+	UFUNCTION(BlueprintCallable, Category = "General calculation")
+		void SetEpsilon(float newEpsilon);
+	UFUNCTION(BlueprintCallable, Category = "General calculation")
+		void SetSizeMultipiler(float newSizeMultipiler);
+	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
+		void SetVectorFieldResolution(FIntVector newVectorFieldResolution);
+	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
+		void SetVectorMeshRadiusMultipiler(float newVectorMeshRadiusMultipiler);
+	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
+		void SetIsShowVectors(bool newIsShowVectors);
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		void SetSplinePointsLimit(int newSplinePointsLimit);
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		void SetSplineResolution(FIntVector newSplineResolution);
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		void SetSplineCalcStep(float newSplineCalcStep);
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		void SetSplineThickness(float newSplineThickness);
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		void SetIsShowSplines(bool newIsShowSplines);
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		void SetParticleSize(float newParticleSize);
+#pragma endregion
+
+#pragma region Getters for uproperties
+	UFUNCTION(BlueprintCallable, Category = "General calculation")
+		float GetSimulationTime();
+	UFUNCTION(BlueprintCallable, Category = "General calculation")
+		float GetEpsilon();
+	UFUNCTION(BlueprintCallable, Category = "General calculation")
+		float GetSizeMultipiler();
+	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
+		FIntVector GetVectorFieldResolution();
+	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
+		float GetVectorMeshRadiusMultipiler();
+	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
+		bool GetIsShowVectors();
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		int GetSplinePointsLimit();
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		FIntVector GetSplineResolution();
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		float GetSplineCalcStep();
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		float GetSplineThickness();
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		bool GetIsShowSplines();
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		float GetParticleSize();
+#pragma endregion
 
 protected:
 

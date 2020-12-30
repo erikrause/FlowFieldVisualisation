@@ -95,6 +95,8 @@ AFieldActor::AFieldActor()
 	SplineMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
 }
 
+#pragma region Setters for uproperties
+
 /// <summary>
 /// Adds splines to SplineComponents array with locations.
 /// </summary>
@@ -130,8 +132,8 @@ void AFieldActor::SetSimulationTime(float time)
 {
 	SimulationTime = time;
 
-	VectorMaterial->SetScalarParameterValue(TEXT("time"), SizeMultipiler);
-	SplineMaterial->SetScalarParameterValue(TEXT("time"), SizeMultipiler);
+	VectorMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
+	SplineMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
 }
 
 void AFieldActor::SetEpsilon(float epsilon)
@@ -286,6 +288,70 @@ void AFieldActor::SetParticleSize(float particleSize)
 
 	_addParticlesToStartPoint();
 }
+#pragma endregion
+
+#pragma region Getters for uproperties
+
+float AFieldActor::GetSimulationTime()
+{
+	return SimulationTime;
+}
+
+float AFieldActor::GetEpsilon()
+{
+	return Epsilon;
+}
+
+float AFieldActor::GetSizeMultipiler()
+{
+	return SizeMultipiler;
+}
+
+FIntVector AFieldActor::GetVectorFieldResolution()
+{
+	return VectorFieldResolution;
+}
+
+float AFieldActor::GetVectorMeshRadiusMultipiler()
+{
+	return VectorMeshRadiusMultipiler;
+}
+
+bool AFieldActor::GetIsShowVectors()
+{
+	return IsShowVectors;
+}
+
+int AFieldActor::GetSplinePointsLimit()
+{
+	return SplinePointsLimit;
+}
+
+FIntVector AFieldActor::GetSplineResolution()
+{
+	return SplineResolution;
+}
+
+float AFieldActor::GetSplineCalcStep()
+{
+	return SplineCalcStep;
+}
+
+float AFieldActor::GetSplineThickness()
+{
+	return SplineThickness;
+}
+
+bool AFieldActor::GetIsShowSplines()
+{
+	return IsShowSplines;
+}
+
+float AFieldActor::GetParticleSize()
+{
+	return ParticleSize;
+}
+#pragma endregion
 
 void AFieldActor::OnConstruction(const FTransform& transform)
 {
@@ -683,11 +749,6 @@ void AFieldActor::Tick(float deltaSeconds)
 	{
 		SimulationTime = 0;
 	}
-}
-
-void AFieldActor::OnButtonPressed()
-{
-	//_isStarted = true;
 }
 
 // DEPRECECATED:
