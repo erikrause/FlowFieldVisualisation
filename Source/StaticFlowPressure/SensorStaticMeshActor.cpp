@@ -130,10 +130,28 @@ void AFieldActor::SetSplinesStart(TArray<FVector> locations)
 
 void AFieldActor::SetSimulationTime(float time)
 {
+	float deltaTime = time - SimulationTime;
 	SimulationTime = time;
 
 	VectorMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
 	SplineMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
+
+	if (IsShowSplines)
+	{
+		_particleTimeCounter += deltaTime;
+		_updateSplineParticles(deltaTime);
+
+		if (_particleTimeCounter > 1)
+		{
+			_particleTimeCounter = 0;
+			_addParticlesToStartPoint();
+		}
+
+		if (SimulationTime > 5)
+		{
+			SimulationTime = 0;
+		}
+	}
 }
 
 void AFieldActor::SetEpsilon(float epsilon)
@@ -767,9 +785,9 @@ void AFieldActor::Tick(float deltaSeconds)
 {
 	Super::Tick(deltaSeconds);
 
-	SetSimulationTime(SimulationTime + deltaSeconds);
+	//SetSimulationTime(SimulationTime + deltaSeconds);
 
-	_particleTimeCounter += deltaSeconds;
+	/*_particleTimeCounter += deltaSeconds;
 	_updateSplineParticles(deltaSeconds);
 
 	if (_particleTimeCounter > 1)
@@ -781,7 +799,7 @@ void AFieldActor::Tick(float deltaSeconds)
 	if (SimulationTime > 5)
 	{
 		SimulationTime = 0;
-	}
+	}*/
 }
 
 // DEPRECECATED:
