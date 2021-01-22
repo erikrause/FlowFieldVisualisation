@@ -109,6 +109,8 @@ public:
 
 	void SetSplinesStart(TArray<FVector> locations);
 
+	void AddParticlesToStartPoint();
+
 #pragma region Setters for uproperties
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		void SetSimulationTime(float time);
@@ -201,8 +203,6 @@ protected:
 	void _updateSplineParticles(float deltaTime);
 
 	float _particleTimeCounter = 0;
-
-	void _addParticlesToStartPoint();
 
 	void _updateMaterialParameters(UMaterialInstanceDynamic* vectorMaterial);
 };
