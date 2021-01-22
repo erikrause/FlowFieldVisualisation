@@ -130,10 +130,29 @@ void AFieldActor::SetSplinesStart(TArray<FVector> locations)
 
 void AFieldActor::SetSimulationTime(float time)
 {
+	float deltaTime = time - SimulationTime;
 	SimulationTime = time;
 
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::SanitizeFloat(SimulationTime));
+	
 	VectorMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
 	SplineMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
+
+	if (IsShowSplines)
+	{
+		_particleTimeCounter += deltaTime;
+		_updateSplineParticles(deltaTime);
+
+		if (_particleTimeCounter > 1)
+		{
+			_particleTimeCounter = 0;
+			AddParticlesToStartPoint();
+		}
+		else if (_particleTimeCounter < 0)		// Проверка на то, что время откатили назад.
+		{
+			_particleTimeCounter = 0;
+		}
+	}
 }
 
 void AFieldActor::SetEpsilon(float epsilon)
@@ -286,7 +305,7 @@ void AFieldActor::SetParticleSize(float particleSize)
 	}
 	ParticleInstancedMesh->MarkRenderStateDirty();
 
-	_addParticlesToStartPoint();
+	AddParticlesToStartPoint();		//TODO: проверить, нужна ли эта строка?
 }
 void AFieldActor::SetSplinesPlane(Plane newSplinePlane)
 {
@@ -447,7 +466,7 @@ void AFieldActor::_initVisualisation()
 			SplineInstancedMesh->SetStaticMesh(SplineMesh);
 		}
 
-		_addParticlesToStartPoint();
+		AddParticlesToStartPoint();
 	}
 }
 
@@ -472,8 +491,8 @@ void AFieldActor::_updateSplineParticles(float deltaTime)
 			FVector newParticleLocation = oldParticleLocation + particleVelocity * deltaTime;
 
 			// Проверка на то, что частица в границах куба:
-			if (newParticleLocation.X > min.X && newParticleLocation.Y > min.Y && newParticleLocation.Z > min.Z &&
-				newParticleLocation.X < max.X && newParticleLocation.Y < max.Y && newParticleLocation.Z < max.Z)		// TODO: добавить проверку на particleVelocity.IsNearZero(); либо лимит на количество частиц.
+			if (newParticleLocation.X >= min.X && newParticleLocation.Y >= min.Y && newParticleLocation.Z >= min.Z &&
+				newParticleLocation.X <= max.X && newParticleLocation.Y <= max.Y && newParticleLocation.Z <= max.Z)		// TODO: добавить проверку на particleVelocity.IsNearZero(); либо лимит на количество частиц.
 			{
 				if (particleId + 1 < spline->ParticleIds.Num())
 				{
@@ -501,7 +520,7 @@ void AFieldActor::_updateSplineParticles(float deltaTime)
 	ParticleInstancedMesh->MarkRenderStateDirty();		// Отрендерить изменения.
 }
 
-void AFieldActor::_addParticlesToStartPoint()
+void AFieldActor::AddParticlesToStartPoint()
 {
 	// Init spline particles:
 	for (Spline* spline : Splines)
@@ -767,9 +786,9 @@ void AFieldActor::Tick(float deltaSeconds)
 {
 	Super::Tick(deltaSeconds);
 
-	SetSimulationTime(SimulationTime + deltaSeconds);
+	//SetSimulationTime(SimulationTime + deltaSeconds);
 
-	_particleTimeCounter += deltaSeconds;
+	/*_particleTimeCounter += deltaSeconds;
 	_updateSplineParticles(deltaSeconds);
 
 	if (_particleTimeCounter > 1)
@@ -781,7 +800,7 @@ void AFieldActor::Tick(float deltaSeconds)
 	if (SimulationTime > 5)
 	{
 		SimulationTime = 0;
-	}
+	}*/
 }
 
 // DEPRECECATED:
