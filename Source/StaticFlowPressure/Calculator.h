@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-//#include "Calculation.generated.h"
+//#include "Calculator.generated.h"
 /*
 struct Bounds
 {
@@ -25,7 +25,7 @@ struct Bounds
 };*/
 
 UENUM()
-enum class Plane : uint8
+enum class TestPlane : uint8
 {
 	XY,
 	XZ,
@@ -33,17 +33,18 @@ enum class Plane : uint8
 };
 
 //UCLASS()
-class STATICFLOWPRESSURE_API Calculator
+class STATICFLOWPRESSURE_API Calculator //: public UObject
 {
-public:
 	//GENERATED_BODY()
+public:
+
 	Calculator();
 	~Calculator();
 	static double sigmoid(double x);
-	virtual FVector calc_vel(double time, double x, double y, double z) = 0;
-	virtual double calc_pres(double time, double x, double y, double z, FVector vel) = 0;
+	virtual FVector calc_vel(double time, double x, double y, double z) = 0;// PURE_VIRTUAL(UCalculator::calc_vel);
+	virtual double calc_pres(double time, double x, double y, double z, FVector vel) = 0; // PURE_VIRTUAL(UCalculator::calc_pres);
 	TArray<FVector> CalculateLocations(FIntVector resolution, bool isApplyBias = true);
-	TArray<FVector> CalculateFlatLocations(float firstAxisRes, float secondAxisRes, Plane plane, bool isOppositePlane, bool isApplyBias = true);
+	TArray<FVector> CalculateFlatLocations(float firstAxisRes, float secondAxisRes, TestPlane plane, bool isOppositePlane, bool isApplyBias = true);
 	FVector GetDistanceBetweenSensors(FIntVector resolution);
 
 	const FVector LowerLimits = FVector(1, 1, 1);		// A
@@ -52,12 +53,3 @@ public:
 	double epsilon;
 	double lyambda;
 };
-
-/*
-class STATICFLOWPRESSURE_API Calculation
-{
-public:
-	Calculation();
-	~Calculation();
-};
-*/

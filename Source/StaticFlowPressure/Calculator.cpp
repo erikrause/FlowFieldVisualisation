@@ -204,7 +204,7 @@ TArray<FVector> Calculator::CalculateLocations(FIntVector resolution, bool isApp
     return locations;
 }
 
-TArray<FVector> Calculator::CalculateFlatLocations(float firstAxisRes, float secondAxisRes, Plane plane, bool isOppositePlane, bool isApplyBias)    // TODO: FIntVector arg.
+TArray<FVector> Calculator::CalculateFlatLocations(float firstAxisRes, float secondAxisRes, TestPlane plane, bool isOppositePlane, bool isApplyBias)    // TODO: FIntVector arg.
 {
     TArray<FVector> locations = TArray<FVector>();
 
@@ -219,15 +219,15 @@ TArray<FVector> Calculator::CalculateFlatLocations(float firstAxisRes, float sec
             tempY = (double)j / (double)(secondAxisRes - 1);
 
             FVector location;
-            if (plane == Plane::XY)
+            if (plane == TestPlane::XY)
             {
                 location = FVector(tempX, tempY, 0);
             }
-            else if (plane == Plane::XZ)
+            else if (plane == TestPlane::XZ)
             {
                 location = FVector(tempX, 0, tempY);
             }
-            else if (plane == Plane::YZ)
+            else if (plane == TestPlane::YZ)
             {
                 location = FVector(0, tempX, tempY);
             }

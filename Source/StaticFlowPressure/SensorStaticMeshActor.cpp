@@ -10,7 +10,6 @@ PRAGMA_DISABLE_OPTIMIZATION
 
 AFieldActor::AFieldActor()
 {
-	_calculator = new PaperTest();
 	PrimaryActorTick.bCanEverTick = true;
 
 	USceneComponent* root = CreateDefaultSubobject<USceneComponent>("Root");
@@ -93,6 +92,44 @@ AFieldActor::AFieldActor()
 	SplineMaterial->SetScalarParameterValue(TEXT("epsilon"), Epsilon);
 	VectorMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
 	SplineMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
+
+#pragma region Creating cuboid surface
+	// Cuboid surface init:
+	CuboidSurface = CuboidSurface::CuboidSurface(_calculator->LowerLimits, _calculator->UpperLimits);
+
+	for (CuboidFace face : CuboidSurface.Faces)
+	{
+		UStaticMeshComponent* cuboidFaceMesh = CreateDefaultSubobject<UStaticMeshComponent>(*(FString("CuboidFace") + FString::FromInt((int)face.Axis) + FString::FromInt((int)face.Position)));
+		cuboidFaceMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+
+		// Set mesh asset:
+		static ConstructorHelpers::FObjectFinder<UStaticMesh> cubdoidSurfaceAsset(TEXT("StaticMesh'/Game/CuboidSurface/CuboidFaceMesh.CuboidFaceMesh'"));
+		cuboidFaceMesh->SetStaticMesh(cubdoidSurfaceAsset.Object);
+		cuboidFaceMesh->SetRelativeLocation((((face.EndPoint + face.StartPoint) * face.Get2DMask() / 2 + face.Bias)) * SizeMultipiler);	// Поставить ассет в центр грани.
+		cuboidFaceMesh->SetRelativeRotation(UKismetMathLibrary::FindLookAtRotation(cuboidFaceMesh->GetRelativeLocation(), GetPivotOffset()));
+
+		FVector faceSize = face.EndPoint - face.StartPoint;
+		int j = 0;
+		for (int i = 0; i < 3; i++)
+		{
+			if (faceSize[i] != 0)
+			{
+				j++;
+
+			}
+		}
+		cuboidFaceMesh->SetRelativeScale3D((face.EndPoint - face.StartPoint) * SizeMultipiler);
+
+		CuboidFacesMeshes.Add(cuboidFaceMesh);
+		
+		//if (i == 0) 
+		//{
+		//	prob = CreateDefaultSubobject<UStaticMeshComponent>(*(FString("CuboidFace") + FString::FromInt((int)face.Axis) + FString::FromInt((int)face.Position)));
+		//	prob->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		//	prob->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
+		//}
+	}
+#pragma endregion
 }
 
 #pragma region Setters for uproperties
@@ -307,7 +344,7 @@ void AFieldActor::SetParticleSize(float particleSize)
 
 	AddParticlesToStartPoint();		//TODO: проверить, нужна ли эта строка?
 }
-void AFieldActor::SetSplinesPlane(Plane newSplinePlane)
+void AFieldActor::SetSplinesPlane(TestPlane newSplinePlane)
 {
 	SplinesPlane = newSplinePlane;
 
@@ -332,6 +369,12 @@ float AFieldActor::GetSimulationTime()
 {
 	return SimulationTime;
 }
+/*
+void AFieldActor::SetCalculator(UCalculator* calculator)
+{
+	_calculator = calculator;
+	SetSimulationTime(SimulationTime);
+}*/
 
 float AFieldActor::GetEpsilon()
 {
@@ -387,7 +430,7 @@ float AFieldActor::GetParticleSize()
 {
 	return ParticleSize;
 }
-Plane AFieldActor::GetSplinesPlane()
+TestPlane AFieldActor::GetSplinesPlane()
 {
 	return SplinesPlane;
 }
@@ -831,7 +874,7 @@ void ASensorStaticMeshActor::_setAbsoluteColor()
 
 		sensor->pressure = _calculator->calc_pres(_secondsCounter, location->X, location->Y, location->Z);
 
-		double blend = Calculator::sigmoid(sensor->pressure * 10);
+		double blend = UCalculator::sigmoid(sensor->pressure * 10);
 		dynamicMaterial->SetScalarParameterValue("Blend", blend);
 	}
 }

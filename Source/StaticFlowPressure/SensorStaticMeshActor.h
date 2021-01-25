@@ -3,13 +3,15 @@
 #pragma once
 
 #include "Calculator.h"
-#include "PaperTest.h"
+//#include "PaperTest.h"
+#include "Test1.h"
 #include "Components/SplineComponent.h"
 #include "Components\SplineMeshComponent.h"
 #include "CoreMinimal.h"
 #include <chrono>	// foor debug
 using namespace std::chrono;
 //#include "Engine/StaticMeshActor.h"
+#include <StaticFlowPressure/CuboidSurface.h>
 #include "GameFramework/Actor.h"
 #include "SensorStaticMeshActor.generated.h"
 
@@ -80,7 +82,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Spline resolution (number of splines by axis)")
 		FIntVector SplineResolution = FIntVector(20, 20, 1);	// TODO: переделать через плотность.
 	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Splines start axis")
-		Plane SplinesPlane = Plane::XY;
+		TestPlane SplinesPlane = TestPlane::XY;
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
 		bool IsOppositeSplinesPlane = false;
 
@@ -111,6 +113,10 @@ public:
 
 	void AddParticlesToStartPoint();
 
+	CuboidSurface CuboidSurface;
+	UPROPERTY(EditAnywhere)
+	TArray<UStaticMeshComponent*> CuboidFacesMeshes;
+
 #pragma region Setters for uproperties
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		void SetSimulationTime(float time);
@@ -137,9 +143,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetParticleSize(float newParticleSize);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetSplinesPlane(Plane newSplinePlane);
+		void SetSplinesPlane(TestPlane newSplinePlane);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetIsOppositeSplinesPlane(bool newIsOppositePlane);
+	//UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		//void SetCalculator(UCalculator * calculator);
 #pragma endregion
 
 #pragma region Getters for uproperties
@@ -168,7 +176,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		float GetParticleSize();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		Plane GetSplinesPlane();
+		TestPlane GetSplinesPlane();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		bool GetIsOppositeSplinesPlane();
 #pragma endregion
@@ -177,7 +185,7 @@ protected:
 
 	FCriticalSection _mutex;// = FWindowsCriticalSection();	// For parallel calc.
 
-	Calculator* _calculator = new PaperTest();
+	Calculator* _calculator = new Test1();
 
 	// Ќужно ли проверить на WITH_EDITOR?
 	virtual void PostLoad() override;
