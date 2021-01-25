@@ -10,6 +10,7 @@ PRAGMA_DISABLE_OPTIMIZATION
 
 AFieldActor::AFieldActor()
 {
+	_calculator = CreateDefaultSubobject<UTest1>(TEXT("Calculator"));
 	PrimaryActorTick.bCanEverTick = true;
 
 	USceneComponent* root = CreateDefaultSubobject<USceneComponent>("Root");
@@ -369,12 +370,12 @@ float AFieldActor::GetSimulationTime()
 {
 	return SimulationTime;
 }
-/*
+
 void AFieldActor::SetCalculator(UCalculator* calculator)
 {
 	_calculator = calculator;
 	SetSimulationTime(SimulationTime);
-}*/
+}
 
 float AFieldActor::GetEpsilon()
 {

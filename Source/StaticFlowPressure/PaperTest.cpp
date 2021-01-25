@@ -2,15 +2,15 @@
 
 #include "PaperTest.h"
 
-PaperTest::PaperTest()
+UPaperTest::UPaperTest()
 {
 }
 
-PaperTest::~PaperTest()
+UPaperTest::~UPaperTest()
 {
 }
 
-FVector PaperTest::calc_vel(double time, double x, double y, double z)
+FVector UPaperTest::calc_vel(double time, double x, double y, double z)
 {
     FVector vector = FVector();
 
@@ -22,7 +22,7 @@ FVector PaperTest::calc_vel(double time, double x, double y, double z)
     return vector;
 }
 
-double PaperTest::calc_pres(double time, double x, double y, double z, FVector vel)
+double UPaperTest::calc_pres(double time, double x, double y, double z, FVector vel)
 {
     return -FVector::DotProduct(vel, vel) / 2;
 }

@@ -117,6 +117,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	TArray<UStaticMeshComponent*> CuboidFacesMeshes;
 
+	UPROPERTY(VisibleAnywhere, Category = "General calculation")
+		UCalculator* _calculator;//new UTest1::UTest1();
+
 #pragma region Setters for uproperties
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		void SetSimulationTime(float time);
@@ -146,8 +149,8 @@ public:
 		void SetSplinesPlane(TestPlane newSplinePlane);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetIsOppositeSplinesPlane(bool newIsOppositePlane);
-	//UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		//void SetCalculator(UCalculator * calculator);
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		void SetCalculator(UCalculator* calculator);
 #pragma endregion
 
 #pragma region Getters for uproperties
@@ -184,8 +187,6 @@ public:
 protected:
 
 	FCriticalSection _mutex;// = FWindowsCriticalSection();	// For parallel calc.
-
-	Calculator* _calculator = new Test1();
 
 	// Нужно ли проверить на WITH_EDITOR?
 	virtual void PostLoad() override;

@@ -4,15 +4,18 @@
 
 #include "Calculator.h"
 #include "CoreMinimal.h"
+#include "PaperTest.generated.h"
 
 /**
  * 
  */
-class STATICFLOWPRESSURE_API PaperTest : public Calculator
+UCLASS(Blueprintable)
+class STATICFLOWPRESSURE_API UPaperTest : public UCalculator
 {
+	GENERATED_BODY()
 public:
-	PaperTest();
-	~PaperTest();
+	UPaperTest();
+	~UPaperTest();
 
 	// Унаследовано через Calculator
 	virtual FVector calc_vel(double time, double x, double y, double z) override;

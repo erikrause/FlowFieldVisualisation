@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-//#include "Calculator.generated.h"
+#include "Calculator.generated.h"
 /*
 struct Bounds
 {
@@ -32,17 +32,17 @@ enum class TestPlane : uint8
 	YZ
 };
 
-//UCLASS()
-class STATICFLOWPRESSURE_API Calculator //: public UObject
+UCLASS(Blueprintable)
+class STATICFLOWPRESSURE_API UCalculator : public UObject
 {
-	//GENERATED_BODY()
+	GENERATED_BODY()
 public:
 
-	Calculator();
-	~Calculator();
+	UCalculator();
+	~UCalculator();
 	static double sigmoid(double x);
-	virtual FVector calc_vel(double time, double x, double y, double z) = 0;// PURE_VIRTUAL(UCalculator::calc_vel);
-	virtual double calc_pres(double time, double x, double y, double z, FVector vel) = 0; // PURE_VIRTUAL(UCalculator::calc_pres);
+	virtual FVector calc_vel(double time, double x, double y, double z);// = 0;// PURE_VIRTUAL(UCalculator::calc_vel);
+	virtual double calc_pres(double time, double x, double y, double z, FVector vel);// = 0; // PURE_VIRTUAL(UCalculator::calc_pres);
 	TArray<FVector> CalculateLocations(FIntVector resolution, bool isApplyBias = true);
 	TArray<FVector> CalculateFlatLocations(float firstAxisRes, float secondAxisRes, TestPlane plane, bool isOppositePlane, bool isApplyBias = true);
 	FVector GetDistanceBetweenSensors(FIntVector resolution);

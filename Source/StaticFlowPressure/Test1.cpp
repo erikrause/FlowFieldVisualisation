@@ -3,15 +3,15 @@
 #include "Test1.h"
 #include <map>
 
-Test1::Test1()
+UTest1::UTest1()
 {
 }
 
-Test1::~Test1()
+UTest1::~UTest1()
 {
 }
 
-FVector Test1::calc_vel(double time, double x, double y, double z)
+FVector UTest1::calc_vel(double time, double x, double y, double z)
 {
     /*
     std::map<int, std::function<double()>> coorMap;
@@ -28,7 +28,7 @@ FVector Test1::calc_vel(double time, double x, double y, double z)
     return vector;
 }
 
-double Test1::calc_pres(double time, double x, double y, double z, FVector vel)
+double UTest1::calc_pres(double time, double x, double y, double z, FVector vel)
 {
     /* DEBUG:
     double prob1 = exp(-2 * epsilon * time);
