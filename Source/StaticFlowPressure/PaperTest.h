@@ -17,6 +17,6 @@ public:
 	UPaperTest();
 
 	// Унаследовано через Calculator
-	virtual FVector calc_vel(double time, double x, double y, double z) override;
-	virtual double calc_pres(double time, double x, double y, double z, FVector vel) override;
+	virtual FVector Calc_vel(double time, double x, double y, double z) override;
+	virtual double Calc_pres(double time, double x, double y, double z, FVector vel) override;
 };

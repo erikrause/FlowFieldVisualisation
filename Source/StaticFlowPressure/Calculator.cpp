@@ -28,8 +28,6 @@ double* massiv_data;
 
 UCalculator::UCalculator()
 {
-    epsilon = 1;
-    lyambda = 1;
 }
 
 UCalculator::~UCalculator()
@@ -40,11 +38,11 @@ double UCalculator::sigmoid(double x)
 {
     return 1 / (1 + exp(-x));
 }
-FVector UCalculator::calc_vel(double time, double x, double y, double z)
+FVector UCalculator::Calc_vel(double time, double x, double y, double z)
 {
     return FVector();
 }
-double UCalculator::calc_pres(double time, double x, double y, double z, FVector vel)
+double UCalculator::Calc_pres(double time, double x, double y, double z, FVector vel)
 {
     return 0.0;
 }

@@ -197,8 +197,8 @@ void AFieldActor::SetEpsilon(float epsilon)
 {
 	Epsilon = epsilon;
 
-	VectorMaterial->SetScalarParameterValue(TEXT("epsilon"), Epsilon);
-	SplineMaterial->SetScalarParameterValue(TEXT("epsilon"), Epsilon);
+	VectorMaterial->SetScalarParameterValue(TEXT("epsilon"), epsilon);
+	SplineMaterial->SetScalarParameterValue(TEXT("epsilon"), epsilon);
 
 	if (IsShowSplines)
 	{
@@ -536,7 +536,7 @@ void AFieldActor::_updateSplineParticles(float deltaTime)
 			ParticleInstancedMesh->GetInstanceTransform(particleId, particleTransform);
 			FVector oldParticleLocation = particleTransform.GetLocation();
 			// TODO: изменить по дистации на сплайне. ¬ременное решение:
-			FVector particleVelocity = _calculator->calc_vel(SimulationTime, oldParticleLocation.X, oldParticleLocation.Y, oldParticleLocation.Z);
+			FVector particleVelocity = _calculator->Calc_vel(SimulationTime, oldParticleLocation.X, oldParticleLocation.Y, oldParticleLocation.Z);
 			FVector newParticleLocation = oldParticleLocation + particleVelocity * deltaTime;
 
 			// ѕроверка на то, что частица в границах куба:
@@ -720,7 +720,7 @@ void AFieldActor::_createSplinePoints(USplineComponent* splineComponent, bool is
 	FVector offset = splineComponentLocation / SizeMultipiler;
 	FVector splinePoint = splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local) / SizeMultipiler + offset;
 
-	FVector vel = _calculator->calc_vel(SimulationTime, splinePoint.X, splinePoint.Y, splinePoint.Z);
+	FVector vel = _calculator->Calc_vel(SimulationTime, splinePoint.X, splinePoint.Y, splinePoint.Z);
 	bool isCorrectNormalized = vel.Normalize();
 	FVector newSplinePoint = (splinePoint + vel * SplineCalcStep) - offset;
 	//
@@ -753,7 +753,7 @@ void AFieldActor::_createSplinePoints(USplineComponent* splineComponent, bool is
 
 
 		// Next loop prepare:
-		vel = _calculator->calc_vel(SimulationTime, newSplinePoint.X + offset.X, newSplinePoint.Y + offset.Y, newSplinePoint.Z + offset.Z);
+		vel = _calculator->Calc_vel(SimulationTime, newSplinePoint.X + offset.X, newSplinePoint.Y + offset.Y, newSplinePoint.Z + offset.Z);
 		isCorrectNormalized = vel.Normalize();
 		newSplinePoint = (newSplinePoint + vel * SplineCalcStep);
 		i++;
