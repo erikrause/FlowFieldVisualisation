@@ -30,19 +30,15 @@ UCalculator::UCalculator()
 {
 }
 
-UCalculator::~UCalculator()
-{
-}
-
 double UCalculator::sigmoid(double x)
 {
     return 1 / (1 + exp(-x));
 }
-FVector UCalculator::Calc_vel(double time, double x, double y, double z)
+FVector UCalculator::Calc_vel(float time, FVector pos)
 {
     return FVector();
 }
-double UCalculator::Calc_pres(double time, double x, double y, double z, FVector vel)
+float UCalculator::Calc_pres(float time, FVector pos)
 {
     return 0.0;
 }

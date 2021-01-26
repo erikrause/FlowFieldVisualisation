@@ -6,19 +6,19 @@ UPaperTest::UPaperTest()
 {
 }
 
-FVector UPaperTest::Calc_vel(double time, double x, double y, double z)
+FVector UPaperTest::Calc_vel(float time, FVector pos)
 {
     FVector vector = FVector();
 
     float ex = exp(-Epsilon * time);
-    vector.X = ex * (sin(y) - cos(z));
-    vector.Y = ex * (sin(z) - cos(x));
-    vector.Z = ex * (sin(x) - cos(y));
+    vector.X = ex * (sin(pos.Y) - cos(pos.Z));
+    vector.Y = ex * (sin(pos.Z) - cos(pos.X));
+    vector.Z = ex * (sin(pos.X) - cos(pos.Y));
 
     return vector;
 }
 
-double UPaperTest::Calc_pres(double time, double x, double y, double z, FVector vel)
+float UPaperTest::Calc_pres(float time, FVector pos)
 {
-    return -FVector::DotProduct(vel, vel) / 2;
+    return -FVector::DotProduct(Calc_vel(time, pos), Calc_vel(time, pos)) / 2;
 }

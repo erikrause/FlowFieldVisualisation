@@ -18,6 +18,6 @@ public:
 	UTest1();
 	
 	// Унаследовано через Calculator
-	virtual FVector Calc_vel(double time, double x, double y, double z) override;
-	virtual double Calc_pres(double time, double x, double y, double z, FVector vel) override;
+	virtual FVector Calc_vel(float time, FVector position) override;
+	virtual float Calc_pres(float time, FVector position) override; 
 };
