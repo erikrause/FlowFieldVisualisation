@@ -6,10 +6,6 @@ UPaperTest::UPaperTest()
 {
 }
 
-UPaperTest::~UPaperTest()
-{
-}
-
 FVector UPaperTest::calc_vel(double time, double x, double y, double z)
 {
     FVector vector = FVector();

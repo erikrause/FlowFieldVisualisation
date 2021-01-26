@@ -16,7 +16,6 @@ class STATICFLOWPRESSURE_API UTest1 : public UCalculator
 	GENERATED_BODY()
 public:
 	UTest1();
-	~UTest1();
 	
 	// Унаследовано через Calculator
 	virtual FVector calc_vel(double time, double x, double y, double z) override;

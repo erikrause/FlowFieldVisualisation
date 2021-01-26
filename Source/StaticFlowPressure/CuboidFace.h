@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 
 UENUM()
-enum FaceAxis
+enum class FaceAxis : uint8
 {
 	XY,
 	XZ,

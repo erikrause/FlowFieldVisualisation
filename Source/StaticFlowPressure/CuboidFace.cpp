@@ -57,15 +57,15 @@ CuboidFace::~CuboidFace()
 
 FVector CuboidFace::Get2DMask()
 {
-    if (Axis == XY)
+    if (Axis == FaceAxis::XY)
     {
         return FVector(1, 1, 0);
     }
-    else if (Axis == XZ)
+    else if (Axis == FaceAxis::XZ)
     {
         return FVector(1, 0, 1);
     }
-    else if (Axis == YZ)
+    else if (Axis == FaceAxis::YZ)
     {
         return FVector(0, 1, 1);
     }
@@ -75,15 +75,15 @@ FVector CuboidFace::Get2DMask()
 
 FVector CuboidFace::Get2DMaskNegative()
 {
-    if (Axis == XY)
+    if (Axis == FaceAxis::XY)
     {
         return FVector(0, 0, 1);
     }
-    else if (Axis == XZ)
+    else if (Axis == FaceAxis::XZ)
     {
         return FVector(0, 1, 0);
     }
-    else if (Axis == YZ)
+    else if (Axis == FaceAxis::YZ)
     {
         return FVector(1, 0, 0);
     }

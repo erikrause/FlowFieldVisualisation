@@ -212,7 +212,7 @@ TArray<FVector> UCalculator::CalculateLocations(FIntVector resolution, bool isAp
     return locations;
 }
 
-TArray<FVector> UCalculator::CalculateFlatLocations(float firstAxisRes, float secondAxisRes, TestPlane plane, bool isOppositePlane, bool isApplyBias)    // TODO: FIntVector arg.
+TArray<FVector> UCalculator::CalculateFlatLocations(float firstAxisRes, float secondAxisRes, FaceAxis plane, bool isOppositePlane, bool isApplyBias)    // TODO: FIntVector arg.
 {
     TArray<FVector> locations = TArray<FVector>();
 
@@ -227,15 +227,15 @@ TArray<FVector> UCalculator::CalculateFlatLocations(float firstAxisRes, float se
             tempY = (double)j / (double)(secondAxisRes - 1);
 
             FVector location;
-            if (plane == TestPlane::XY)
+            if (plane == FaceAxis::XY)
             {
                 location = FVector(tempX, tempY, 0);
             }
-            else if (plane == TestPlane::XZ)
+            else if (plane == FaceAxis::XZ)
             {
                 location = FVector(tempX, 0, tempY);
             }
-            else if (plane == TestPlane::YZ)
+            else if (plane == FaceAxis::YZ)
             {
                 location = FVector(0, tempX, tempY);
             }

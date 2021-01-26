@@ -345,7 +345,7 @@ void AFieldActor::SetParticleSize(float particleSize)
 
 	AddParticlesToStartPoint();		//TODO: проверить, нужна ли эта строка?
 }
-void AFieldActor::SetSplinesPlane(TestPlane newSplinePlane)
+void AFieldActor::SetSplinesPlane(FaceAxis newSplinePlane)
 {
 	SplinesPlane = newSplinePlane;
 
@@ -374,7 +374,12 @@ float AFieldActor::GetSimulationTime()
 void AFieldActor::SetCalculator(UCalculator* calculator)
 {
 	_calculator = calculator;
-	SetSimulationTime(SimulationTime);
+
+	if (IsShowSplines)
+	{
+		UpdateSpline();
+		ParticleInstancedMesh->ClearInstances();
+	}
 }
 
 float AFieldActor::GetEpsilon()
@@ -431,7 +436,7 @@ float AFieldActor::GetParticleSize()
 {
 	return ParticleSize;
 }
-TestPlane AFieldActor::GetSplinesPlane()
+FaceAxis AFieldActor::GetSplinesPlane()
 {
 	return SplinesPlane;
 }

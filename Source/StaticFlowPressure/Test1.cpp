@@ -1,13 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Test1.h"
-#include <map>
 
 UTest1::UTest1()
-{
-}
-
-UTest1::~UTest1()
 {
 }
 
