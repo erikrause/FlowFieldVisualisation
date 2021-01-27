@@ -16,8 +16,8 @@ FVector UTest1::Calc_vel(float time, FVector pos)
     return coorMap[coor]();*/
 
     FVector vector = FVector();
-    vector.X = exp(-Epsilon * time) * cos(pos.X);
-    vector.Y = -exp(-Epsilon * time) * cos(pos.Y);
+    vector.X = exp(-Epsilon * time) * cos(pos.Y);
+    vector.Y = -exp(-Epsilon * time) * cos(pos.X);
     vector.Z = 0;
 
     return vector;

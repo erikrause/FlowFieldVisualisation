@@ -5,12 +5,12 @@ PRAGMA_DISABLE_OPTIMIZATION
 #include "Kismet/KismetMathLibrary.h"
 //#include <cmath>
 //#include "Calculation.h"
-#include "Test1.h"
+#include "PaperTest.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
 AFieldActor::AFieldActor()
 {
-	_calculator = CreateDefaultSubobject<UTest1>(TEXT("Calculator"));
+	_calculator = CreateDefaultSubobject<UPaperTest>(TEXT("Calculator"));
 	PrimaryActorTick.bCanEverTick = true;
 
 	USceneComponent* root = CreateDefaultSubobject<USceneComponent>("Root");
@@ -476,6 +476,7 @@ void AFieldActor::PostLoad()	// Вызывается при загрузке.
 {
 	Super::PostLoad();
 
+	_calculator = NewObject<UPaperTest>();
 	_initVisualisation();
 }
 

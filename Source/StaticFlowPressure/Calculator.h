@@ -53,4 +53,5 @@ public:
 
 	float Epsilon = 1;
 	float Lyambda = 1;
+	float Nju = 2;	//параметр для теста 4
 };
