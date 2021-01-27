@@ -26,19 +26,21 @@ double* massiv_data;
 #define eps 1.e-4
 #define M_PI 3.14159265358979323846
 
-Calculator::Calculator()
-{
-    epsilon = 1;
-    lyambda = 1;
-}
-
-Calculator::~Calculator()
+UCalculator::UCalculator()
 {
 }
 
-double Calculator::sigmoid(double x)
+double UCalculator::sigmoid(double x)
 {
     return 1 / (1 + exp(-x));
+}
+FVector UCalculator::Calc_vel(float time, FVector pos)
+{
+    return FVector();
+}
+float UCalculator::Calc_pres(float time, FVector pos)
+{
+    return 0.0;
 }
 /*
 double Calculation::calc_vel(double time, double x, double y, double z, int coor)//поле скорости coor={0,1,2} - номер компоненты вектора скорости
@@ -158,7 +160,7 @@ double Calculation::calc_pres(double time, double x, double y, double z)//поле д
 /// elements of resolution must be > 1.
 /// isApplyBias - применить смещнеие. Если false - то точки будут в диапазоне [0, 1].
 /// 
-TArray<FVector> Calculator::CalculateLocations(FIntVector resolution, bool isApplyBias)
+TArray<FVector> UCalculator::CalculateLocations(FIntVector resolution, bool isApplyBias)
 {
     // Проверка, если одна из осей <= 1 (костыль, TODO):
     FVector axisMask = FVector(1, 1, 1);
@@ -204,7 +206,7 @@ TArray<FVector> Calculator::CalculateLocations(FIntVector resolution, bool isApp
     return locations;
 }
 
-TArray<FVector> Calculator::CalculateFlatLocations(float firstAxisRes, float secondAxisRes, Plane plane, bool isOppositePlane, bool isApplyBias)    // TODO: FIntVector arg.
+TArray<FVector> UCalculator::CalculateFlatLocations(float firstAxisRes, float secondAxisRes, FaceAxis plane, bool isOppositePlane, bool isApplyBias)    // TODO: FIntVector arg.
 {
     TArray<FVector> locations = TArray<FVector>();
 
@@ -219,15 +221,15 @@ TArray<FVector> Calculator::CalculateFlatLocations(float firstAxisRes, float sec
             tempY = (double)j / (double)(secondAxisRes - 1);
 
             FVector location;
-            if (plane == Plane::XY)
+            if (plane == FaceAxis::XY)
             {
                 location = FVector(tempX, tempY, 0);
             }
-            else if (plane == Plane::XZ)
+            else if (plane == FaceAxis::XZ)
             {
                 location = FVector(tempX, 0, tempY);
             }
-            else if (plane == Plane::YZ)
+            else if (plane == FaceAxis::YZ)
             {
                 location = FVector(0, tempX, tempY);
             }
@@ -251,7 +253,7 @@ TArray<FVector> Calculator::CalculateFlatLocations(float firstAxisRes, float sec
     return locations;
 }
 
-FVector Calculator::GetDistanceBetweenSensors(FIntVector resolution)
+FVector UCalculator::GetDistanceBetweenSensors(FIntVector resolution)
 {
     /*int num_p_along_x = scale;
     return ((B - A) * (double)2 / (double)(num_p_along_x - 1) + A) -

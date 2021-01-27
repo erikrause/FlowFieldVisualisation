@@ -13,7 +13,7 @@ TMap<FVector, AFieldActor*>  UStaticFlowFunctionLibrary::CreateSensors(UObject* 
 {
 	/*
 	TMap<FVector, AFieldActor*> sensorsMap = TMap<FVector, AFieldActor*>();
-	TArray<FVector> locations = Calculator::CalculateLocations(scale, 200);
+	TArray<FVector> locations = UCalculator::CalculateLocations(scale, 200);
 	UWorld* world = WorldContextObject->GetWorld();
 
 	for (FVector location : locations)

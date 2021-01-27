@@ -1,22 +1,19 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "Calculator.h"
 #include "CoreMinimal.h"
-#include "PaperTest.generated.h"
+#include "Test8.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS(Blueprintable)
-class STATICFLOWPRESSURE_API UPaperTest : public UCalculator
+class STATICFLOWPRESSURE_API UTest8 : public UCalculator
 {
 	GENERATED_BODY()
 public:
-	UPaperTest();
+	UTest8();
 
-	// Унаследовано через Calculator
 	virtual FVector Calc_vel(float time, FVector position) override;
 	virtual float Calc_pres(float time, FVector position) override;
 };

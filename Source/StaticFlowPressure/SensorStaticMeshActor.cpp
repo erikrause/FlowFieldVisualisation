@@ -5,12 +5,12 @@ PRAGMA_DISABLE_OPTIMIZATION
 #include "Kismet/KismetMathLibrary.h"
 //#include <cmath>
 //#include "Calculation.h"
-#include "Test1.h"
+#include "PaperTest.h"
 #include "Materials/MaterialInstanceDynamic.h"
 
 AFieldActor::AFieldActor()
 {
-	_calculator = new PaperTest();
+	_calculator = CreateDefaultSubobject<UPaperTest>(TEXT("Calculator"));
 	PrimaryActorTick.bCanEverTick = true;
 
 	USceneComponent* root = CreateDefaultSubobject<USceneComponent>("Root");
@@ -93,6 +93,44 @@ AFieldActor::AFieldActor()
 	SplineMaterial->SetScalarParameterValue(TEXT("epsilon"), Epsilon);
 	VectorMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
 	SplineMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
+
+#pragma region Creating cuboid surface
+	// Cuboid surface init:
+	CuboidSurface = CuboidSurface::CuboidSurface(_calculator->LowerLimits, _calculator->UpperLimits);
+
+	for (CuboidFace face : CuboidSurface.Faces)
+	{
+		UStaticMeshComponent* cuboidFaceMesh = CreateDefaultSubobject<UStaticMeshComponent>(*(FString("CuboidFace") + FString::FromInt((int)face.Axis) + FString::FromInt((int)face.Position)));
+		cuboidFaceMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+
+		// Set mesh asset:
+		static ConstructorHelpers::FObjectFinder<UStaticMesh> cubdoidSurfaceAsset(TEXT("StaticMesh'/Game/CuboidSurface/CuboidFaceMesh.CuboidFaceMesh'"));
+		cuboidFaceMesh->SetStaticMesh(cubdoidSurfaceAsset.Object);
+		cuboidFaceMesh->SetRelativeLocation((((face.EndPoint + face.StartPoint) * face.Get2DMask() / 2 + face.Bias)) * SizeMultipiler);	// Поставить ассет в центр грани.
+		cuboidFaceMesh->SetRelativeRotation(UKismetMathLibrary::FindLookAtRotation(cuboidFaceMesh->GetRelativeLocation(), GetPivotOffset()));
+
+		FVector faceSize = face.EndPoint - face.StartPoint;
+		int j = 0;
+		for (int i = 0; i < 3; i++)
+		{
+			if (faceSize[i] != 0)
+			{
+				j++;
+
+			}
+		}
+		cuboidFaceMesh->SetRelativeScale3D((face.EndPoint - face.StartPoint) * SizeMultipiler);
+
+		CuboidFacesMeshes.Add(cuboidFaceMesh);
+		
+		//if (i == 0) 
+		//{
+		//	prob = CreateDefaultSubobject<UStaticMeshComponent>(*(FString("CuboidFace") + FString::FromInt((int)face.Axis) + FString::FromInt((int)face.Position)));
+		//	prob->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		//	prob->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
+		//}
+	}
+#pragma endregion
 }
 
 #pragma region Setters for uproperties
@@ -159,8 +197,8 @@ void AFieldActor::SetEpsilon(float epsilon)
 {
 	Epsilon = epsilon;
 
-	VectorMaterial->SetScalarParameterValue(TEXT("epsilon"), Epsilon);
-	SplineMaterial->SetScalarParameterValue(TEXT("epsilon"), Epsilon);
+	VectorMaterial->SetScalarParameterValue(TEXT("epsilon"), epsilon);
+	SplineMaterial->SetScalarParameterValue(TEXT("epsilon"), epsilon);
 
 	if (IsShowSplines)
 	{
@@ -307,7 +345,7 @@ void AFieldActor::SetParticleSize(float particleSize)
 
 	AddParticlesToStartPoint();		//TODO: проверить, нужна ли эта строка?
 }
-void AFieldActor::SetSplinesPlane(Plane newSplinePlane)
+void AFieldActor::SetSplinesPlane(FaceAxis newSplinePlane)
 {
 	SplinesPlane = newSplinePlane;
 
@@ -331,6 +369,17 @@ void AFieldActor::SetIsOppositeSplinesPlane(bool newIsOppositePlane)
 float AFieldActor::GetSimulationTime()
 {
 	return SimulationTime;
+}
+
+void AFieldActor::SetCalculator(UCalculator* calculator)
+{
+	_calculator = calculator;
+
+	if (IsShowSplines)
+	{
+		UpdateSpline();
+		ParticleInstancedMesh->ClearInstances();
+	}
 }
 
 float AFieldActor::GetEpsilon()
@@ -387,7 +436,7 @@ float AFieldActor::GetParticleSize()
 {
 	return ParticleSize;
 }
-Plane AFieldActor::GetSplinesPlane()
+FaceAxis AFieldActor::GetSplinesPlane()
 {
 	return SplinesPlane;
 }
@@ -427,6 +476,7 @@ void AFieldActor::PostLoad()	// Вызывается при загрузке.
 {
 	Super::PostLoad();
 
+	_calculator = NewObject<UPaperTest>();
 	_initVisualisation();
 }
 
@@ -487,7 +537,7 @@ void AFieldActor::_updateSplineParticles(float deltaTime)
 			ParticleInstancedMesh->GetInstanceTransform(particleId, particleTransform);
 			FVector oldParticleLocation = particleTransform.GetLocation();
 			// TODO: изменить по дистации на сплайне. Временное решение:
-			FVector particleVelocity = _calculator->calc_vel(SimulationTime, oldParticleLocation.X, oldParticleLocation.Y, oldParticleLocation.Z);
+			FVector particleVelocity = _calculator->Calc_vel(SimulationTime, oldParticleLocation);
 			FVector newParticleLocation = oldParticleLocation + particleVelocity * deltaTime;
 
 			// Проверка на то, что частица в границах куба:
@@ -671,7 +721,7 @@ void AFieldActor::_createSplinePoints(USplineComponent* splineComponent, bool is
 	FVector offset = splineComponentLocation / SizeMultipiler;
 	FVector splinePoint = splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local) / SizeMultipiler + offset;
 
-	FVector vel = _calculator->calc_vel(SimulationTime, splinePoint.X, splinePoint.Y, splinePoint.Z);
+	FVector vel = _calculator->Calc_vel(SimulationTime, splinePoint);
 	bool isCorrectNormalized = vel.Normalize();
 	FVector newSplinePoint = (splinePoint + vel * SplineCalcStep) - offset;
 	//
@@ -704,7 +754,7 @@ void AFieldActor::_createSplinePoints(USplineComponent* splineComponent, bool is
 
 
 		// Next loop prepare:
-		vel = _calculator->calc_vel(SimulationTime, newSplinePoint.X + offset.X, newSplinePoint.Y + offset.Y, newSplinePoint.Z + offset.Z);
+		vel = _calculator->Calc_vel(SimulationTime, newSplinePoint + offset);
 		isCorrectNormalized = vel.Normalize();
 		newSplinePoint = (newSplinePoint + vel * SplineCalcStep);
 		i++;
@@ -831,7 +881,7 @@ void ASensorStaticMeshActor::_setAbsoluteColor()
 
 		sensor->pressure = _calculator->calc_pres(_secondsCounter, location->X, location->Y, location->Z);
 
-		double blend = Calculator::sigmoid(sensor->pressure * 10);
+		double blend = UCalculator::sigmoid(sensor->pressure * 10);
 		dynamicMaterial->SetScalarParameterValue("Blend", blend);
 	}
 }
