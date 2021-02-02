@@ -4,6 +4,8 @@
 
 UPaperTest::UPaperTest()
 {
+    //_initMaterial(Name);
+    int prob = 0;
 }
 
 FVector UPaperTest::Calc_vel(float time, FVector pos)

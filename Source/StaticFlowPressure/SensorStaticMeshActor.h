@@ -44,7 +44,6 @@ public:
 	AFieldActor();
 
 	// TODO: refactoring - separate VectorField and Splines to components.
-
 	UMaterialInstanceDynamic* VectorMaterial;
 
 	UInstancedStaticMeshComponent* VectorInstancedMesh;
@@ -113,12 +112,21 @@ public:
 
 	void AddParticlesToStartPoint();
 
+	template<typename T>
+	const char* _getClassName(T);
+
+	//TArray<FSplineCalculatorAsset> SpllineCalculatorsAssets;
+	TMap<FString, UMaterial*> SpllineCalculatorsAssets;
+
 	CuboidSurface CuboidSurface;
 	UPROPERTY(EditAnywhere)
 	TArray<UStaticMeshComponent*> CuboidFacesMeshes;
 
-	UPROPERTY(VisibleAnywhere, Category = "General calculation")
-		UCalculator* _calculator;//new UTest1::UTest1();
+	UPROPERTY(EditAnywhere, Category = "General calculation")
+		UCalculator* Calculator;//new UTest1::UTest1();
+
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		float SplineParticlesSpawnDelay = 1;
 
 #pragma region Setters for uproperties
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
@@ -150,7 +158,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetIsOppositeSplinesPlane(bool newIsOppositePlane);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetCalculator(UCalculator* calculator);
+		void SetCalculator(UCalculator* newCalculator);
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		void SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDelay);
 #pragma endregion
 
 #pragma region Getters for uproperties
@@ -182,6 +192,8 @@ public:
 		FaceAxis GetSplinesPlane();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		bool GetIsOppositeSplinesPlane();
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		float GetSplineParticlesSpawnDelay();
 #pragma endregion
 
 protected:
@@ -213,5 +225,10 @@ protected:
 
 	float _particleTimeCounter = 0;
 
-	void _updateMaterialParameters(UMaterialInstanceDynamic* vectorMaterial);
+	//void _updateMaterialParameters(UMaterialInstanceDynamic* vectorMaterial);
+
+	void _initSplineCalculatorsAssets();
+
+	// Adds tuple to SpllineCalculatorsAssets
+	void _addSplineCalculatorAsset(FString calculatorName);
 };

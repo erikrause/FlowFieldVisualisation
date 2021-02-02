@@ -3,13 +3,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/StaticMeshActor.h"
+#include "MyClass2.generated.h"
 
 /**
  * 
  */
-class STATICFLOWPRESSURE_API MyClass2
+UCLASS()
+class STATICFLOWPRESSURE_API AMyClass2 : public AActor
 {
+	GENERATED_BODY()
 public:
-	MyClass2();
-	~MyClass2();
+	AMyClass2();
+
+	virtual void BeginPlay() override;
+	virtual void Tick(float deltaTime) override;
+	float TimeCounter;
+	UMaterial* Material1;
+	UMaterial* Material2;
+
+	UPROPERTY(EditAnywhere)
+	UStaticMeshComponent* StaticMeshComponent;
 };

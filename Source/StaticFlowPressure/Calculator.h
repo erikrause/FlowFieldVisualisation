@@ -40,6 +40,10 @@ class STATICFLOWPRESSURE_API UCalculator : public UObject
 public:
 
 	UCalculator();
+	virtual ~UCalculator() = default;
+	FString Name; //= FString("Base");
+	UMaterialInstanceDynamic* SplineMaterial;
+
 	static double sigmoid(double x);
 	virtual FVector Calc_vel(float time, FVector position);// = 0;// PURE_VIRTUAL(UCalculator::calc_vel);
 	virtual float Calc_pres(float time, FVector position);// = 0; // PURE_VIRTUAL(UCalculator::calc_pres);
@@ -54,4 +58,6 @@ public:
 	float Epsilon = 1;
 	float Lyambda = 1;
 	float Nju = 2;	//параметр для теста 4
+
+	void _initMaterial(UObject* parent);
 };
