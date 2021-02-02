@@ -20,7 +20,6 @@ FVector UTest9::Calc_vel(float time, FVector pos)
 
 float UTest9::Calc_pres(float time, FVector pos)
 {
-	//return exp(2 * Epsilon * time * (pow(Nju, 2) - pow(Lyambda, 2))) * cos(Lyambda * pos.X) * cos(Lyambda * pos.Y);
 	FVector vel = Calc_vel(time, pos);
 
 	return -0.5 * FVector::DotProduct(vel, vel);

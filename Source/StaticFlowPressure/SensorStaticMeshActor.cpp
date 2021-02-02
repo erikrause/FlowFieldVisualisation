@@ -7,10 +7,10 @@ PRAGMA_DISABLE_OPTIMIZATION
 //#include "Calculation.h"
 #include "PaperTest.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Test2.h"
 
 AFieldActor::AFieldActor()
 {
-	_calculator = CreateDefaultSubobject<UPaperTest>(TEXT("Calculator"));
 	PrimaryActorTick.bCanEverTick = true;
 
 	USceneComponent* root = CreateDefaultSubobject<USceneComponent>("Root");
@@ -39,11 +39,6 @@ AFieldActor::AFieldActor()
 
 	#pragma endregion
 
-	#if WITH_EDITOR
-	FVector pivotOffset = (_calculator->UpperLimits + _calculator->LowerLimits) * SizeMultipiler / 2;
-	SetPivotOffset(pivotOffset);
-	#endif
-
 	#pragma region Creating splines
 
 	SplineInstancedMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*FString("SplineInstancedMesh"));
@@ -61,9 +56,11 @@ AFieldActor::AFieldActor()
 	SplineMesh = splineAsset.Object;
 	SplineInstancedMesh->SetStaticMesh(SplineMesh);
 	// Set material:
-	static ConstructorHelpers::FObjectFinder<UMaterial> splineMaterialAsset(TEXT("Material'/Game/SplineMaterial.SplineMaterial'"));
-	SplineMaterial = UMaterialInstanceDynamic::Create(splineMaterialAsset.Object, this, FName("SplineMatreial"));
-	SplineInstancedMesh->SetMaterial(0, SplineMaterial);
+	static ConstructorHelpers::FObjectFinder<UMaterial> splineMaterialAsset(TEXT("Material'/Game/SplineMaterials/SplineMaterial_Test2.SplineMaterial_Test2'"));
+	SplineMaterial = UMaterialInstanceDynamic::Create(splineMaterialAsset.Object, SplineInstancedMesh, FName("SplineMatreial"));
+	//SplineInstancedMesh->SetMaterial(0, SplineMaterial);
+	//SplineInstancedMesh->CreateAndSetMaterialInstanceDynamicFromMaterial(0, SplineMaterial);
+	SplineInstancedMesh->CreateDynamicMaterialInstance(0, SplineMaterial);
 
 	#pragma endregion
 
@@ -94,9 +91,19 @@ AFieldActor::AFieldActor()
 	VectorMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
 	SplineMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
 
+	// Init Calculator:
+	_initSplineCalculatorsAssets();
+	SetCalculator(CreateDefaultSubobject<UTest2>(TEXT("Calculator")));
+
+
+#if WITH_EDITOR
+	FVector pivotOffset = (Calculator->UpperLimits + Calculator->LowerLimits) * SizeMultipiler / 2;
+	SetPivotOffset(pivotOffset);
+#endif
+
 #pragma region Creating cuboid surface
 	// Cuboid surface init:
-	CuboidSurface = CuboidSurface::CuboidSurface(_calculator->LowerLimits, _calculator->UpperLimits);
+	CuboidSurface = CuboidSurface::CuboidSurface(Calculator->LowerLimits, Calculator->UpperLimits);
 
 	for (CuboidFace face : CuboidSurface.Faces)
 	{
@@ -123,12 +130,11 @@ AFieldActor::AFieldActor()
 
 		CuboidFacesMeshes.Add(cuboidFaceMesh);
 		
-		//if (i == 0) 
-		//{
-		//	prob = CreateDefaultSubobject<UStaticMeshComponent>(*(FString("CuboidFace") + FString::FromInt((int)face.Axis) + FString::FromInt((int)face.Position)));
-		//	prob->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-		//	prob->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
-		//}
+		// Оптимизации
+		cuboidFaceMesh->SetCollisionProfileName(FName("OverlapAll"), false);
+		cuboidFaceMesh->SetCastShadow(false);
+		cuboidFaceMesh->SetLightAttachmentsAsGroup(true);
+		cuboidFaceMesh->SetRenderCustomDepth(true);
 	}
 #pragma endregion
 }
@@ -223,7 +229,7 @@ void AFieldActor::SetSizeMultipiler(float sizeMultipiler)
 		spline->Component->DestroyComponent();
 	}
 	Splines.Empty();
-	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
+	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
 	SetSplinesStart(locations);
 
 	if (IsShowSplines)
@@ -285,7 +291,7 @@ void AFieldActor::SetSplineResolution(FIntVector splineResolution)
 {
 	SplineResolution = splineResolution;
 
-	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
+	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
 	SetSplinesStart(locations);
 	UpdateSpline();
 }
@@ -349,7 +355,7 @@ void AFieldActor::SetSplinesPlane(FaceAxis newSplinePlane)
 {
 	SplinesPlane = newSplinePlane;
 
-	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
+	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
 	SetSplinesStart(locations);
 	UpdateSpline();
 }
@@ -357,7 +363,7 @@ void AFieldActor::SetIsOppositeSplinesPlane(bool newIsOppositePlane)
 {
 	IsOppositeSplinesPlane = newIsOppositePlane;
 
-	TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
+	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
 	SetSplinesStart(locations);
 
 	UpdateSpline();
@@ -371,9 +377,33 @@ float AFieldActor::GetSimulationTime()
 	return SimulationTime;
 }
 
+template<typename T>
+const char* AFieldActor::_getClassName(T) {
+	return typeid(T).name();
+}
+
 void AFieldActor::SetCalculator(UCalculator* calculator)
 {
-	_calculator = calculator;
+	Calculator = calculator;
+	//Calculator->_initMaterial(SplineInstancedMesh);
+
+	// Set material:
+	FString name;
+	Calculator->GetClass()->GetName(name);
+	auto material = SpllineCalculatorsAssets[name];
+	/*SplineCalculatorAsset SpllineCalculatorAsset = SpllineCalculatorsAssets.FilterByPredicate([calculator](const SplineCalculatorAsset& Item)
+		{
+			return Item.Name == FString(typeid(calculator).name());
+		})[0];*/
+
+	//if (calculator->SplineMaterial != nullptr)
+	//{
+	//SplineMaterial = material;
+	//SplineMaterial = StaticMeshComponent->CreateDynamicMaterialInstance(0, material);
+	//SplineInstancedMesh->SetMaterial(0, SplineMaterial);
+	//SplineInstancedMesh->CreateAndSetMaterialInstanceDynamicFromMaterial(0, SplineMaterial);
+	SplineMaterial = SplineInstancedMesh->CreateDynamicMaterialInstance(0, material);
+	//}
 
 	if (IsShowSplines)
 	{
@@ -476,7 +506,7 @@ void AFieldActor::PostLoad()	// Вызывается при загрузке.
 {
 	Super::PostLoad();
 
-	_calculator = NewObject<UPaperTest>();
+	Calculator = NewObject<UPaperTest>();
 	_initVisualisation();
 }
 
@@ -506,7 +536,7 @@ void AFieldActor::_initVisualisation()
 
 	if (IsShowSplines)
 	{
-		TArray<FVector> locations = _calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
+		TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
 		SetSplinesStart(locations);
 
 		UpdateSpline();
@@ -524,8 +554,8 @@ void AFieldActor::_updateSplineParticles(float deltaTime)
 {
 	//int instancesNum = ParticleInstancedMesh->GetInstanceCount();
 
-	FVector min = _calculator->LowerLimits;
-	FVector max = _calculator->UpperLimits;
+	FVector min = Calculator->LowerLimits;
+	FVector max = Calculator->UpperLimits;
 
 	ParallelFor(Splines.Num(), [this, deltaTime, min, max](int32 i)
 	{
@@ -537,7 +567,7 @@ void AFieldActor::_updateSplineParticles(float deltaTime)
 			ParticleInstancedMesh->GetInstanceTransform(particleId, particleTransform);
 			FVector oldParticleLocation = particleTransform.GetLocation();
 			// TODO: изменить по дистации на сплайне. Временное решение:
-			FVector particleVelocity = _calculator->Calc_vel(SimulationTime, oldParticleLocation);
+			FVector particleVelocity = Calculator->Calc_vel(SimulationTime, oldParticleLocation);
 			FVector newParticleLocation = oldParticleLocation + particleVelocity * deltaTime;
 
 			// Проверка на то, что частица в границах куба:
@@ -568,6 +598,32 @@ void AFieldActor::_updateSplineParticles(float deltaTime)
 		}
 	}, EParallelForFlags::ForceSingleThread);		// TODO: сделать многопоток (проблемы с Remove из TArray).
 	ParticleInstancedMesh->MarkRenderStateDirty();		// Отрендерить изменения.
+}
+
+void AFieldActor::_initSplineCalculatorsAssets()
+{
+	_addSplineCalculatorAsset(FString("Test1"));
+	_addSplineCalculatorAsset(FString("Test2"));
+	_addSplineCalculatorAsset(FString("Test3"));
+	_addSplineCalculatorAsset(FString("Test4"));
+	_addSplineCalculatorAsset(FString("Test5"));
+	_addSplineCalculatorAsset(FString("Test6"));
+	/*_addSplineCalculatorAsset(FString("Test7"));
+	_addSplineCalculatorAsset(FString("Test8"));
+	_addSplineCalculatorAsset(FString("Test9"));*/
+	_addSplineCalculatorAsset(FString("Test10"));
+	_addSplineCalculatorAsset(FString("PaperTest"));
+}
+
+void AFieldActor::_addSplineCalculatorAsset(FString name)
+{
+	TArray< FStringFormatArg > args;
+	args.Add(FStringFormatArg(name));
+	args.Add(FStringFormatArg(name));
+	FString materialName = FString::Format(TEXT("Material'/Game/SplineMaterials/SplineMaterial_{0}.SplineMaterial_{1}'"), args);
+	ConstructorHelpers::FObjectFinder<UMaterial> splineMaterialAsset(*materialName);
+
+	SpllineCalculatorsAssets.Add(name, splineMaterialAsset.Object);
 }
 
 void AFieldActor::AddParticlesToStartPoint()
@@ -651,6 +707,10 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 	{
 		SetIsOppositeSplinesPlane(IsOppositeSplinesPlane);
 	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, Calculator))
+	{
+		SetCalculator(Calculator);
+	}
 }
 #endif
 
@@ -658,7 +718,7 @@ void AFieldActor::_reCreateVecotrField()
 {
 	VectorInstancedMesh->ClearInstances();
 
-	TArray<FVector> locations = _calculator->CalculateLocations(VectorFieldResolution);
+	TArray<FVector> locations = Calculator->CalculateLocations(VectorFieldResolution);
 
 	for (FVector location : locations)
 	{
@@ -677,7 +737,7 @@ int AFieldActor::_createSensorInstancedMesh(FVector location)
 	auto rotation = FRotator(0, 0, 0);
 
 	/* Расчет радиуса меша */
-	FVector distanse = _calculator->GetDistanceBetweenSensors(VectorFieldResolution) * SizeMultipiler;	// TODO: refactor location size multipiler.
+	FVector distanse = Calculator->GetDistanceBetweenSensors(VectorFieldResolution) * SizeMultipiler;	// TODO: refactor location size multipiler.
 	//double radius = (sqrt(pow(distanse, 2) + pow(distanse, 2)) / 2) * 0.25;	// Для сфер.
 	//double radiusMultipiler = 0.5;
 	double radiusX = (sqrt(pow(distanse.X, 2) + pow(distanse.X, 2)) / 2) * VectorMeshRadiusMultipiler;
@@ -714,14 +774,14 @@ void AFieldActor::_createSplinePoints(USplineComponent* splineComponent, bool is
 		}
 	}
 	FVector splineComponentLocation = splineComponent->GetRelativeLocation();
-	FVector min = _calculator->LowerLimits;
-	FVector max = _calculator->UpperLimits;
+	FVector min = Calculator->LowerLimits;
+	FVector max = Calculator->UpperLimits;
 
 	// Loop init:
 	FVector offset = splineComponentLocation / SizeMultipiler;
 	FVector splinePoint = splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local) / SizeMultipiler + offset;
 
-	FVector vel = _calculator->Calc_vel(SimulationTime, splinePoint);
+	FVector vel = Calculator->Calc_vel(SimulationTime, splinePoint);
 	bool isCorrectNormalized = vel.Normalize();
 	FVector newSplinePoint = (splinePoint + vel * SplineCalcStep) - offset;
 	//
@@ -754,7 +814,7 @@ void AFieldActor::_createSplinePoints(USplineComponent* splineComponent, bool is
 
 
 		// Next loop prepare:
-		vel = _calculator->Calc_vel(SimulationTime, newSplinePoint + offset);
+		vel = Calculator->Calc_vel(SimulationTime, newSplinePoint + offset);
 		isCorrectNormalized = vel.Normalize();
 		newSplinePoint = (newSplinePoint + vel * SplineCalcStep);
 		i++;
@@ -774,7 +834,7 @@ void AFieldActor::_createSplinePoints(USplineComponent* splineComponent, bool is
 	if (i < 1000)
 	{
 		FVector lastSplinePoint = (splineComponent->GetLocationAtSplinePoint(i - 1, ESplineCoordinateSpace::Local) / SizeMultipiler + offset);
-		vel = _calculator->calc_vel(0, lastSplinePoint.X, lastSplinePoint.Y, lastSplinePoint.Z);
+		vel = Calculator->calc_vel(0, lastSplinePoint.X, lastSplinePoint.Y, lastSplinePoint.Z);
 		vel.Normalize();
 		vel *= SplineCalcStep;
 		FVector outerSplineVector = vel - lastSplinePoint;	// Вектор, который вышел за границы.
@@ -879,7 +939,7 @@ void ASensorStaticMeshActor::_setAbsoluteColor()
 
 		UMaterialInstanceDynamic* dynamicMaterial = sensor->Material;
 
-		sensor->pressure = _calculator->calc_pres(_secondsCounter, location->X, location->Y, location->Z);
+		sensor->pressure = Calculator->calc_pres(_secondsCounter, location->X, location->Y, location->Z);
 
 		double blend = UCalculator::sigmoid(sensor->pressure * 10);
 		dynamicMaterial->SetScalarParameterValue("Blend", blend);
@@ -901,7 +961,7 @@ void ASensorStaticMeshActor::_setRelativeColor()
 		UMaterialInstanceDynamic* dynamicMaterial = sensor->Material;
 
 		// Вычисление поля давления и его экстремумов.
-		sensor->pressure = _calculator->calc_pres(_secondsCounter, location->X, location->Y, location->Z);
+		sensor->pressure = Calculator->calc_pres(_secondsCounter, location->X, location->Y, location->Z);
 
 		if (sensor->pressure < minPressure)
 		{
