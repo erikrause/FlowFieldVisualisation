@@ -125,6 +125,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "General calculation")
 		UCalculator* Calculator;//new UTest1::UTest1();
 
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		float SplineParticlesSpawnDelay = 1;
+
 #pragma region Setters for uproperties
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		void SetSimulationTime(float time);
@@ -156,6 +159,8 @@ public:
 		void SetIsOppositeSplinesPlane(bool newIsOppositePlane);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetCalculator(UCalculator* newCalculator);
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		void SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDelay);
 #pragma endregion
 
 #pragma region Getters for uproperties
@@ -187,6 +192,8 @@ public:
 		FaceAxis GetSplinesPlane();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		bool GetIsOppositeSplinesPlane();
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		float GetSplineParticlesSpawnDelay();
 #pragma endregion
 
 protected:

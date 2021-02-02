@@ -187,7 +187,7 @@ void AFieldActor::SetSimulationTime(float time)
 		_particleTimeCounter += deltaTime;
 		_updateSplineParticles(deltaTime);
 
-		if (_particleTimeCounter > 1)
+		if (_particleTimeCounter > SplineParticlesSpawnDelay)
 		{
 			_particleTimeCounter = 0;
 			AddParticlesToStartPoint();
@@ -311,6 +311,11 @@ void AFieldActor::SetSplineCalcStep(float splineCalcStep)
 	{
 		UpdateSpline();
 	}
+}
+
+void AFieldActor::SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDelay)
+{
+	SplineParticlesSpawnDelay = newSplineParticlesSpawnDelay;
 }
 
 void AFieldActor::SetSplineThickness(float splineThickness)
@@ -450,6 +455,11 @@ FIntVector AFieldActor::GetSplineResolution()
 float AFieldActor::GetSplineCalcStep()
 {
 	return SplineCalcStep;
+}
+
+float AFieldActor::GetSplineParticlesSpawnDelay()
+{
+	return SplineParticlesSpawnDelay;
 }
 
 float AFieldActor::GetSplineThickness()
