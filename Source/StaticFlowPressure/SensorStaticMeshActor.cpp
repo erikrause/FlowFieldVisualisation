@@ -95,9 +95,9 @@ AFieldActor::AFieldActor()
 	_initSplineCalculatorsAssets();
 	SetCalculator(CreateDefaultSubobject<UTest2>(TEXT("Calculator")));
 
-
+	CubeCenter = (Calculator->UpperLimits + Calculator->LowerLimits) * SizeMultipiler / 2;
 #if WITH_EDITOR
-	FVector pivotOffset = (Calculator->UpperLimits + Calculator->LowerLimits) * SizeMultipiler / 2;
+	FVector pivotOffset = CubeCenter;
 	SetPivotOffset(pivotOffset);
 #endif
 
@@ -114,18 +114,8 @@ AFieldActor::AFieldActor()
 		static ConstructorHelpers::FObjectFinder<UStaticMesh> cubdoidSurfaceAsset(TEXT("StaticMesh'/Game/CuboidSurface/CuboidFaceMesh.CuboidFaceMesh'"));
 		cuboidFaceMesh->SetStaticMesh(cubdoidSurfaceAsset.Object);
 		cuboidFaceMesh->SetRelativeLocation((((face.EndPoint + face.StartPoint) * face.Get2DMask() / 2 + face.Bias)) * SizeMultipiler);	// Поставить ассет в центр грани.
-		cuboidFaceMesh->SetRelativeRotation(UKismetMathLibrary::FindLookAtRotation(cuboidFaceMesh->GetRelativeLocation(), GetPivotOffset()));
+		cuboidFaceMesh->SetRelativeRotation(UKismetMathLibrary::FindLookAtRotation(cuboidFaceMesh->GetRelativeLocation(), CubeCenter));
 
-		FVector faceSize = face.EndPoint - face.StartPoint;
-		int j = 0;
-		for (int i = 0; i < 3; i++)
-		{
-			if (faceSize[i] != 0)
-			{
-				j++;
-
-			}
-		}
 		cuboidFaceMesh->SetRelativeScale3D((face.EndPoint - face.StartPoint) * SizeMultipiler);
 
 		CuboidFacesMeshes.Add(cuboidFaceMesh);
@@ -223,19 +213,33 @@ void AFieldActor::SetSizeMultipiler(float sizeMultipiler)
 	SplineMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
 
 	SplineInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));		// TODO: refactoring with UpdateSpline().
+	ParticleInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
 
-	for (Spline* spline : Splines)		// TODO: убрать SizeMultipiler changing event отдельно (менять только RelativeScale компонентов).
+	CubeCenter = (Calculator->UpperLimits + Calculator->LowerLimits) * SizeMultipiler / 2;
+	//TODO: сделать CuboidFace InstancedMesh актором.
+	int i = 0;
+	for (CuboidFace face : CuboidSurface.Faces)
 	{
-		spline->Component->DestroyComponent();
-	}
-	Splines.Empty();
-	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
-	SetSplinesStart(locations);
+		UStaticMeshComponent* cuboidFaceMesh = CuboidFacesMeshes[i];
+		cuboidFaceMesh->SetRelativeLocation((((face.EndPoint + face.StartPoint) * face.Get2DMask() / 2 + face.Bias)) * SizeMultipiler);	// Поставить ассет в центр грани.
+		cuboidFaceMesh->SetRelativeRotation(UKismetMathLibrary::FindLookAtRotation(cuboidFaceMesh->GetRelativeLocation(), CubeCenter));
+		cuboidFaceMesh->SetRelativeScale3D((face.EndPoint - face.StartPoint) * SizeMultipiler);
 
-	if (IsShowSplines)
-	{
-		UpdateSpline();
+		i++;
 	}
+
+	//for (Spline* spline : Splines)		// TODO: убрать SizeMultipiler changing event отдельно (менять только RelativeScale компонентов).
+	//{
+	//	spline->Component->DestroyComponent();
+	//}
+	//Splines.Empty();
+	//TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
+	//SetSplinesStart(locations);
+
+	//if (IsShowSplines)
+	//{
+	//	UpdateSpline();
+	//}
 	if (IsShowVectors)
 	{
 		_reCreateVecotrField();
@@ -380,11 +384,6 @@ void AFieldActor::SetIsOppositeSplinesPlane(bool newIsOppositePlane)
 float AFieldActor::GetSimulationTime()
 {
 	return SimulationTime;
-}
-
-template<typename T>
-const char* AFieldActor::_getClassName(T) {
-	return typeid(T).name();
 }
 
 void AFieldActor::SetCalculator(UCalculator* calculator)

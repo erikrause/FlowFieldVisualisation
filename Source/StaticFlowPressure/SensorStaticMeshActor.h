@@ -112,12 +112,10 @@ public:
 
 	void AddParticlesToStartPoint();
 
-	template<typename T>
-	const char* _getClassName(T);
-
 	//TArray<FSplineCalculatorAsset> SpllineCalculatorsAssets;
 	TMap<FString, UMaterial*> SpllineCalculatorsAssets;
 
+	FVector CubeCenter;
 	CuboidSurface CuboidSurface;
 	UPROPERTY(EditAnywhere)
 	TArray<UStaticMeshComponent*> CuboidFacesMeshes;
