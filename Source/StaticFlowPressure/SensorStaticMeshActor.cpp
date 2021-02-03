@@ -217,6 +217,10 @@ void AFieldActor::SetSizeMultipiler(float sizeMultipiler)
 
 	_updateCuboidSurface();
 
+	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
+	SetSplinesStart(locations);
+	_updateField();
+
 	//for (Spline* spline : Splines)		// TODO: убрать SizeMultipiler changing event отдельно (менять только RelativeScale компонентов).
 	//{
 	//	spline->Component->DestroyComponent();
