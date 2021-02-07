@@ -10,8 +10,8 @@ UTest2::UTest2()
 FVector UTest2::Calc_vel(float time, FVector pos)
 {
     FVector vector = FVector();
-    vector.X = exp(-Epsilon * time) * cos(pos.Y);
-    vector.Y = -exp(-Epsilon * time) * cos(pos.X);
+    vector.X = exp(-Epsilon * Lyambda * time) * sin(Lyambda * pos.Y);
+    vector.Y = -exp(-Epsilon * Lyambda * time) * sin(Lyambda * pos.X);
     vector.Z = 0;
 
     return vector;

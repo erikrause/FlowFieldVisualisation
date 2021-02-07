@@ -52,8 +52,8 @@ public:
 	TArray<FVector> CalculateFlatLocations(float firstAxisRes, float secondAxisRes, FaceAxis plane, bool isOppositePlane, bool isApplyBias = true);
 	FVector GetDistanceBetweenSensors(FIntVector resolution);
 
-	const FVector LowerLimits = FVector(1, 1, 1);		// A
-	const FVector UpperLimits = FVector(6, 6, 6);		// B
+	FVector LowerLimits = FVector(1, 1, 1);		// A
+	FVector UpperLimits = FVector(6, 6, 6);		// B
 
 	float Epsilon = 1;
 	float Lyambda = 1;

@@ -112,12 +112,10 @@ public:
 
 	void AddParticlesToStartPoint();
 
-	template<typename T>
-	const char* _getClassName(T);
-
 	//TArray<FSplineCalculatorAsset> SpllineCalculatorsAssets;
 	TMap<FString, UMaterial*> SpllineCalculatorsAssets;
 
+	FVector CubeCenter;
 	CuboidSurface CuboidSurface;
 	UPROPERTY(EditAnywhere)
 	TArray<UStaticMeshComponent*> CuboidFacesMeshes;
@@ -161,6 +159,12 @@ public:
 		void SetCalculator(UCalculator* newCalculator);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDelay);
+	UFUNCTION(BlueprintCallable, Category = "General calculation")
+		void SetCalculatorLyambda(float newLyambda);
+	UFUNCTION(BlueprintCallable, Category = "General calculation")
+		void SetLowerLimits(FVector newLowerLimits);
+	UFUNCTION(BlueprintCallable, Category = "General calculation")
+		void SetUpperLimits(FVector newUpperLimits);
 #pragma endregion
 
 #pragma region Getters for uproperties
@@ -194,6 +198,12 @@ public:
 		bool GetIsOppositeSplinesPlane();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		float GetSplineParticlesSpawnDelay();
+	UFUNCTION(BlueprintCallable, Category = "General calculation")
+		float GetCalculatorLyambda();
+	UFUNCTION(BlueprintCallable, Category = "General calculation")
+		FVector GetLowerLimits();
+	UFUNCTION(BlueprintCallable, Category = "General calculation")
+		FVector GetUpperLimits();
 #pragma endregion
 
 protected:
@@ -231,4 +241,7 @@ protected:
 
 	// Adds tuple to SpllineCalculatorsAssets
 	void _addSplineCalculatorAsset(FString calculatorName);
+
+	void _updateField();
+	void _updateCuboidSurface();
 };

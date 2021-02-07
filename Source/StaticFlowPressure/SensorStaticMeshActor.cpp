@@ -95,9 +95,9 @@ AFieldActor::AFieldActor()
 	_initSplineCalculatorsAssets();
 	SetCalculator(CreateDefaultSubobject<UTest2>(TEXT("Calculator")));
 
-
+	CubeCenter = (Calculator->UpperLimits + Calculator->LowerLimits) * SizeMultipiler / 2;
 #if WITH_EDITOR
-	FVector pivotOffset = (Calculator->UpperLimits + Calculator->LowerLimits) * SizeMultipiler / 2;
+	FVector pivotOffset = CubeCenter;
 	SetPivotOffset(pivotOffset);
 #endif
 
@@ -114,18 +114,8 @@ AFieldActor::AFieldActor()
 		static ConstructorHelpers::FObjectFinder<UStaticMesh> cubdoidSurfaceAsset(TEXT("StaticMesh'/Game/CuboidSurface/CuboidFaceMesh.CuboidFaceMesh'"));
 		cuboidFaceMesh->SetStaticMesh(cubdoidSurfaceAsset.Object);
 		cuboidFaceMesh->SetRelativeLocation((((face.EndPoint + face.StartPoint) * face.Get2DMask() / 2 + face.Bias)) * SizeMultipiler);	// Поставить ассет в центр грани.
-		cuboidFaceMesh->SetRelativeRotation(UKismetMathLibrary::FindLookAtRotation(cuboidFaceMesh->GetRelativeLocation(), GetPivotOffset()));
+		cuboidFaceMesh->SetRelativeRotation(UKismetMathLibrary::FindLookAtRotation(cuboidFaceMesh->GetRelativeLocation(), CubeCenter));
 
-		FVector faceSize = face.EndPoint - face.StartPoint;
-		int j = 0;
-		for (int i = 0; i < 3; i++)
-		{
-			if (faceSize[i] != 0)
-			{
-				j++;
-
-			}
-		}
 		cuboidFaceMesh->SetRelativeScale3D((face.EndPoint - face.StartPoint) * SizeMultipiler);
 
 		CuboidFacesMeshes.Add(cuboidFaceMesh);
@@ -223,19 +213,26 @@ void AFieldActor::SetSizeMultipiler(float sizeMultipiler)
 	SplineMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
 
 	SplineInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));		// TODO: refactoring with UpdateSpline().
+	ParticleInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
 
-	for (Spline* spline : Splines)		// TODO: убрать SizeMultipiler changing event отдельно (менять только RelativeScale компонентов).
-	{
-		spline->Component->DestroyComponent();
-	}
-	Splines.Empty();
+	_updateCuboidSurface();
+
 	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
 	SetSplinesStart(locations);
+	_updateField();
 
-	if (IsShowSplines)
-	{
-		UpdateSpline();
-	}
+	//for (Spline* spline : Splines)		// TODO: убрать SizeMultipiler changing event отдельно (менять только RelativeScale компонентов).
+	//{
+	//	spline->Component->DestroyComponent();
+	//}
+	//Splines.Empty();
+	//TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
+	//SetSplinesStart(locations);
+
+	//if (IsShowSplines)
+	//{
+	//	UpdateSpline();
+	//}
 	if (IsShowVectors)
 	{
 		_reCreateVecotrField();
@@ -293,7 +290,7 @@ void AFieldActor::SetSplineResolution(FIntVector splineResolution)
 
 	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
 	SetSplinesStart(locations);
-	UpdateSpline();
+	_updateField();
 }
 
 void AFieldActor::SetSplineCalcStep(float splineCalcStep)
@@ -316,6 +313,35 @@ void AFieldActor::SetSplineCalcStep(float splineCalcStep)
 void AFieldActor::SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDelay)
 {
 	SplineParticlesSpawnDelay = newSplineParticlesSpawnDelay;
+}
+
+void AFieldActor::SetCalculatorLyambda(float newLyambda)
+{
+	Calculator->Lyambda = newLyambda;
+	//VectorMaterial->SetScalarParameterValue(TEXT("lyambda"), epsilon);
+	SplineMaterial->SetScalarParameterValue(TEXT("lyambda"), newLyambda);
+
+	_updateField();
+}
+
+void AFieldActor::SetLowerLimits(FVector newLowerLimits)
+{
+	Calculator->LowerLimits = newLowerLimits;
+	
+	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
+	SetSplinesStart(locations);
+	_updateField();
+	_updateCuboidSurface();
+}
+
+void AFieldActor::SetUpperLimits(FVector newUpperLimits)
+{
+	Calculator->UpperLimits = newUpperLimits;
+
+	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
+	SetSplinesStart(locations);
+	_updateField();
+	_updateCuboidSurface();
 }
 
 void AFieldActor::SetSplineThickness(float splineThickness)
@@ -382,11 +408,6 @@ float AFieldActor::GetSimulationTime()
 	return SimulationTime;
 }
 
-template<typename T>
-const char* AFieldActor::_getClassName(T) {
-	return typeid(T).name();
-}
-
 void AFieldActor::SetCalculator(UCalculator* calculator)
 {
 	Calculator = calculator;
@@ -410,11 +431,7 @@ void AFieldActor::SetCalculator(UCalculator* calculator)
 	SplineMaterial = SplineInstancedMesh->CreateDynamicMaterialInstance(0, material);
 	//}
 
-	if (IsShowSplines)
-	{
-		UpdateSpline();
-		ParticleInstancedMesh->ClearInstances();
-	}
+	_updateField();
 }
 
 float AFieldActor::GetEpsilon()
@@ -460,6 +477,21 @@ float AFieldActor::GetSplineCalcStep()
 float AFieldActor::GetSplineParticlesSpawnDelay()
 {
 	return SplineParticlesSpawnDelay;
+}
+
+float AFieldActor::GetCalculatorLyambda()
+{
+	return Calculator->Lyambda;
+}
+
+FVector AFieldActor::GetLowerLimits()
+{
+	return Calculator->LowerLimits;
+}
+
+FVector AFieldActor::GetUpperLimits()
+{
+	return Calculator->UpperLimits;
 }
 
 float AFieldActor::GetSplineThickness()
@@ -571,6 +603,8 @@ void AFieldActor::_updateSplineParticles(float deltaTime)
 	{
 		Spline* spline = Splines[i];
 
+		TArray<int> particlesToDelete = TArray<int>();
+
 		for (int particleId : spline->ParticleIds)
 		{
 			FTransform particleTransform = FTransform();
@@ -604,8 +638,14 @@ void AFieldActor::_updateSplineParticles(float deltaTime)
 				//_mutex.Lock();
 				ParticleInstancedMesh->RemoveInstance(particleId);
 				//_mutex.Unlock();
+				particlesToDelete.Add(particleId);
+			}
+			for (int particleIndex : particlesToDelete)
+			{
+				//spline->ParticleIds.Remove(particleIndex); TODO: debug.
 			}
 		}
+
 	}, EParallelForFlags::ForceSingleThread);		// TODO: сделать многопоток (проблемы с Remove из TArray).
 	ParticleInstancedMesh->MarkRenderStateDirty();		// Отрендерить изменения.
 }
@@ -634,6 +674,37 @@ void AFieldActor::_addSplineCalculatorAsset(FString name)
 	ConstructorHelpers::FObjectFinder<UMaterial> splineMaterialAsset(*materialName);
 
 	SpllineCalculatorsAssets.Add(name, splineMaterialAsset.Object);
+}
+
+void AFieldActor::_updateField()
+{
+	if (IsShowSplines)
+	{
+		UpdateSpline();
+		ParticleInstancedMesh->ClearInstances();
+	}
+	if (IsShowVectors)
+	{
+		_reCreateVecotrField();
+	}
+}
+
+void AFieldActor::_updateCuboidSurface()
+{
+	CubeCenter = (Calculator->UpperLimits + Calculator->LowerLimits) * SizeMultipiler / 2;
+
+	//TODO: сделать CuboidSurFace InstancedMesh актором.
+	CuboidSurface = CuboidSurface::CuboidSurface(Calculator->LowerLimits, Calculator->UpperLimits);
+	int i = 0;
+	for (CuboidFace face : CuboidSurface.Faces)
+	{
+		UStaticMeshComponent* cuboidFaceMesh = CuboidFacesMeshes[i];
+		cuboidFaceMesh->SetRelativeLocation((((face.EndPoint + face.StartPoint) * face.Get2DMask() / 2 + face.Bias)) * SizeMultipiler);	// Поставить ассет в центр грани.
+		cuboidFaceMesh->SetRelativeRotation(UKismetMathLibrary::FindLookAtRotation(cuboidFaceMesh->GetRelativeLocation(), CubeCenter));
+		cuboidFaceMesh->SetRelativeScale3D((face.EndPoint - face.StartPoint) * SizeMultipiler);
+
+		i++;
+	}
 }
 
 void AFieldActor::AddParticlesToStartPoint()
@@ -872,7 +943,7 @@ void AFieldActor::UpdateSpline(bool isContinue)
 	ParallelFor(Splines.Num(), [this, isContinue](int32 i)
 	{
 		_createSplinePoints(Splines[i]->Component, isContinue);
-	}, EParallelForFlags::None);
+	}, EParallelForFlags::ForceSingleThread);
 
 	// Add mesh to curve:
 	for (Spline* spline : Splines)
