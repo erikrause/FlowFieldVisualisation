@@ -603,6 +603,8 @@ void AFieldActor::_updateSplineParticles(float deltaTime)
 	{
 		Spline* spline = Splines[i];
 
+		TArray<int> particlesToDelete = TArray<int>();
+
 		for (int particleId : spline->ParticleIds)
 		{
 			FTransform particleTransform = FTransform();
@@ -636,8 +638,14 @@ void AFieldActor::_updateSplineParticles(float deltaTime)
 				//_mutex.Lock();
 				ParticleInstancedMesh->RemoveInstance(particleId);
 				//_mutex.Unlock();
+				particlesToDelete.Add(particleId);
+			}
+			for (int particleIndex : particlesToDelete)
+			{
+				//spline->ParticleIds.Remove(particleIndex); TODO: debug.
 			}
 		}
+
 	}, EParallelForFlags::ForceSingleThread);		// TODO: сделать многопоток (проблемы с Remove из TArray).
 	ParticleInstancedMesh->MarkRenderStateDirty();		// Отрендерить изменения.
 }
