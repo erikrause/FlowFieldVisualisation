@@ -28,18 +28,17 @@ double* massiv_data;
 
 UCalculator::UCalculator()
 {
-    int prob = 0;
 }
 
 double UCalculator::sigmoid(double x)
 {
     return 1 / (1 + exp(-x));
 }
-FVector UCalculator::Calc_vel(float time, FVector pos)
+FVector UCalculator::Calc_vel(FVector pos) const
 {
     return FVector();
 }
-float UCalculator::Calc_pres(float time, FVector pos)
+float UCalculator::Calc_pres(FVector pos) const
 {
     return 0.0;
 }
@@ -47,7 +46,7 @@ float UCalculator::Calc_pres(float time, FVector pos)
 /// elements of resolution must be > 1.
 /// isApplyBias - применить смещнеие. Если false - то точки будут в диапазоне [0, 1].
 /// 
-TArray<FVector> UCalculator::CalculateLocations(FIntVector resolution, bool isApplyBias)
+TArray<FVector> UCalculator::CalculateLocations(FIntVector resolution, bool isApplyBias) const
 {
     // Проверка, если одна из осей <= 1 (костыль, TODO):
     FVector axisMask = FVector(1, 1, 1);
@@ -140,7 +139,7 @@ TArray<FVector> UCalculator::CalculateFlatLocations(float firstAxisRes, float se
     return locations;
 }
 
-FVector UCalculator::GetDistanceBetweenSensors(FIntVector resolution)
+FVector UCalculator::GetDistanceBetweenSensors(FIntVector resolution) const
 {
     /*int num_p_along_x = scale;
     return ((B - A) * (double)2 / (double)(num_p_along_x - 1) + A) -

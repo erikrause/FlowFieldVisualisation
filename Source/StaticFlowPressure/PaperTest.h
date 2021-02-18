@@ -18,6 +18,6 @@ public:
 
 	// Унаследовано через Calculator
 	FString Name = FString("PaperTest");
-	virtual FVector Calc_vel(float time, FVector position) override;
-	virtual float Calc_pres(float time, FVector position) override;
+	virtual FVector Calc_vel(FVector position) const override;
+	virtual float Calc_pres(FVector position) const override;
 };

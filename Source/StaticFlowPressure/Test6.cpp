@@ -7,7 +7,7 @@ UTest6::UTest6()
 {
 }
 
-FVector UTest6::Calc_vel(float time, FVector pos)
+FVector UTest6::Calc_vel(FVector pos) const
 {
 	FVector velocity = FVector();
 	velocity.X = -pos.Y * pos.Z;
@@ -17,9 +17,9 @@ FVector UTest6::Calc_vel(float time, FVector pos)
 	return velocity;
 }
 
-float UTest6::Calc_pres(float time, FVector pos)
+float UTest6::Calc_pres(FVector pos) const
 {
-	FVector vel = Calc_vel(time, pos);
+	FVector vel = Calc_vel(pos);
 
 	return -0.5 * FVector::DotProduct(vel, vel);
 }

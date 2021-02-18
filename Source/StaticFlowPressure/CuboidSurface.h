@@ -4,20 +4,26 @@
 
 #include "CoreMinimal.h"
 #include "CuboidFace.h"
+#include "CuboidSurface.generated.h"
 
 /**
  * Поверхность куба. 
  */
-class STATICFLOWPRESSURE_API CuboidSurface
+UCLASS()
+class STATICFLOWPRESSURE_API UCuboidSurface : public USceneComponent
 {
+	GENERATED_BODY()
 public:
-	CuboidSurface();
-	CuboidSurface(FVector startPoint, FVector endPoint);
-	~CuboidSurface();
+	UCuboidSurface();
+	//static UCuboidSurface* Construct(FVector startPoint, FVector endPoint);
+	void Init(FVector startPoint, FVector endPoint);
+
+	UCuboidFace* GetFaceBy(FaceAxis faceAxis, FacePosition facePosition);
 
 	//TArray<FVector> GetSurfacePointGrid(FVector resolution);
 
 	FVector StartPoint;
 	FVector EndPoint;
-	TArray<CuboidFace> Faces;
+	UPROPERTY(EditAnywhere, Category = "Visualisation")
+		TArray<UCuboidFace*> Faces;
 };

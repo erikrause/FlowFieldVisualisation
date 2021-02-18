@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SplinesStartPlane.h"
+#include "CuboidFace.generated.h"
 
 UENUM()
 enum class FaceAxis : uint8
@@ -22,13 +24,18 @@ enum FacePosition
 /**
  * Грань куба.
  */
-class STATICFLOWPRESSURE_API CuboidFace
+UCLASS()
+class STATICFLOWPRESSURE_API UCuboidFace : public UStaticMeshComponent	//USplinesStartPlane
 {
-
+	GENERATED_BODY()
 public:
 
-	CuboidFace(FVector cuboidStartPoint, FVector cuboidEndPoint, FaceAxis axis, FacePosition facePosition);
-	~CuboidFace();
+	UCuboidFace();
+
+	//Parametrized constructor as: https://answers.unrealengine.com/questions/156055/passing-arguments-to-constructors-in-ue4.html
+	//static UCuboidFace* Construct(FVector cuboidStartPoint, FVector cuboidEndPoint, FaceAxis axis, FacePosition facePosition);
+
+	void Init(FVector cuboidStartPoint, FVector cuboidEndPoint, FaceAxis axis, FacePosition facePosition);
 
 	FaceAxis Axis;
 	FacePosition Position;
@@ -36,7 +43,7 @@ public:
 	FVector EndPoint;
 	FVector Bias;
 
-	TArray<FVector> GetFacePointsGrid(float firstAxisRes, float secondAxisRes);
-	FVector Get2DMask();
-	FVector Get2DMaskNegative();
+	TArray<FVector> GetPointsGrid(float firstAxisRes, float secondAxisRes);
+	FVector GetAxisMask();
+	FVector GetNormalVector();
 };

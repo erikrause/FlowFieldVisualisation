@@ -45,12 +45,12 @@ public:
 	UMaterialInstanceDynamic* SplineMaterial;
 
 	static double sigmoid(double x);
-	virtual FVector Calc_vel(float time, FVector position);// = 0;// PURE_VIRTUAL(UCalculator::calc_vel);
-	virtual float Calc_pres(float time, FVector position);// = 0; // PURE_VIRTUAL(UCalculator::calc_pres);
+	virtual FVector Calc_vel(FVector position) const;// = 0;// PURE_VIRTUAL(UCalculator::calc_vel);
+	virtual float Calc_pres(FVector position) const;// = 0; // PURE_VIRTUAL(UCalculator::calc_pres);
 	//virtual float Calc_pres_by_vel(float time, FVector velocity);
-	TArray<FVector> CalculateLocations(FIntVector resolution, bool isApplyBias = true);
+	TArray<FVector> CalculateLocations(FIntVector resolution, bool isApplyBias = true) const;
 	TArray<FVector> CalculateFlatLocations(float firstAxisRes, float secondAxisRes, FaceAxis plane, bool isOppositePlane, bool isApplyBias = true);
-	FVector GetDistanceBetweenSensors(FIntVector resolution);
+	FVector GetDistanceBetweenSensors(FIntVector resolution) const;		// TODO: переместить в Vector field.
 
 	FVector LowerLimits = FVector(1, 1, 1);		// A
 	FVector UpperLimits = FVector(6, 6, 6);		// B
@@ -58,6 +58,7 @@ public:
 	float Epsilon = 1;
 	float Lyambda = 1;
 	float Nju = 2;	//параметр для теста 4
+	float Time = 0;
 
 	void _initMaterial(UObject* parent);
 };

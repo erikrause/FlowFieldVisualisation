@@ -8,9 +8,9 @@ UTest10::UTest10()
 {
 }
 
-FVector UTest10::Calc_vel(float time, FVector pos)
+FVector UTest10::Calc_vel(FVector pos) const
 {
-	float e = -Epsilon * time;
+	float e = -Epsilon * Time;
 	FVector velocity = FVector();
 	velocity.X = sin(y) - cos(z);
 	velocity.Y = sin(z) - cos(x);
@@ -19,9 +19,9 @@ FVector UTest10::Calc_vel(float time, FVector pos)
 	return e * velocity;
 }
 
-float UTest10::Calc_pres(float time, FVector pos)
+float UTest10::Calc_pres(FVector pos) const
 {
-	FVector vel = Calc_vel(time, pos);
+	FVector vel = Calc_vel(pos);
 
 	return -0.5 * FVector::DotProduct(vel, vel);
 }
