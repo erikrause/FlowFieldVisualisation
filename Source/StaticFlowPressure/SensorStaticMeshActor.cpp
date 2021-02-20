@@ -76,7 +76,9 @@ AFieldActor::AFieldActor()
 #pragma region Creating spline field
 
 	SplineField = CreateDefaultSubobject<USplineField>(TEXT("SplineField"));
-	SplineField->Init(&Calculator);
+	TArray<ISplinesStartArea*> splinesStartAreas;
+	splinesStartAreas.Add(CuboidSurface);
+	SplineField->Init(&Calculator, splinesStartAreas);
 	SplineField->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
 #pragma endregion
@@ -91,40 +93,7 @@ void AFieldActor::PostActorCreated()	// Вызывается при созданни в редакторе или 
 {
 	Super::PostActorCreated();
 
-	_initVisualisation();	//TODO: move to OnConstruction.
-}
-
-void AFieldActor::_initVisualisation()
-{
-	//VectorInstancedMesh->ClearInstances();
-	//SplineInstancedMesh->ClearInstances();
-	//ParticleInstancedMesh->ClearInstances();
-
-
-	if (IsShowVectors) // TODO: переместить в конструктор и PostLoad.
-	{
-		//_reCreateVecotrField();
-
-		if (VectorMesh != NULL)
-		{
-			//VectorInstancedMesh->SetStaticMesh(VectorMesh);
-		}
-	}
-
-	if (IsShowSplines)
-	{
-		TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
-		//SetSplinesStart(locations);
-
-		//UpdateSpline();
-
-		//if (SplineMesh != NULL)
-		//{
-		//	SplineInstancedMesh->SetStaticMesh(SplineMesh);
-		//}
-
-		AddParticlesToStartPoint();
-	}
+	//initVisualisation();	//TODO: move to OnConstruction.
 }
 
 void AFieldActor::OnConstruction(const FTransform& transform)
@@ -133,12 +102,12 @@ void AFieldActor::OnConstruction(const FTransform& transform)
 
 	SetCalculator(NewObject<UPaperTest>());
 	UCuboidFace* cuboidFace = CuboidSurface->GetFaceBy(FaceAxis::XY, FacePosition::Front);
-	SplineField->SetSplinesStart(cuboidFace->GetPointsGrid(20, 20));
-	SplineField->UpdateSplines();
+	cuboidFace->IsActivated = true;
+	SplineField->UpdateSplines(true);
 
 	VectorField->Revisualize();
 
-	_initVisualisation();
+	int prob = 0;
 
 #pragma region Updating splines
 	/*
@@ -193,170 +162,67 @@ void AFieldActor::SetSimulationTime(float time)
 
 void AFieldActor::SetEpsilon(float epsilon)
 {
-	Epsilon = epsilon;
+	Calculator->Epsilon = epsilon;
 
-	//VectorMaterial->SetScalarParameterValue(TEXT("epsilon"), epsilon);
-	//SplineMaterial->SetScalarParameterValue(TEXT("epsilon"), epsilon);
+	SplineField->SplineMaterial->SetScalarParameterValue(TEXT("epsilon"), epsilon);
+	SplineField->UpdateSplines();
 
-	if (IsShowSplines)
-	{
-		//UpdateSpline();
-	}
-	if (IsShowVectors)
-	{
-		//_reCreateVecotrField();
-	}
+	VectorField->VectorMaterial->SetScalarParameterValue(TEXT("epsilon"), epsilon);
 }
 
 void AFieldActor::SetSizeMultipiler(float sizeMultipiler)
 {
 	SizeMultipiler = sizeMultipiler;
 	SetActorRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
-
-	//VectorMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
-	//SplineMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
-
-	//SplineInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));		// TODO: refactoring with UpdateSpline().
-	//ParticleInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
-
-	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
-	//SetSplinesStart(locations);
-	_updateField();
-
-	//for (USpline* spline : Splines)		// TODO: убрать SizeMultipiler changing event отдельно (менять только RelativeScale компонентов).
-	//{
-	//	spline->Component->DestroyComponent();
-	//}
-	//Splines.Empty();
-	//TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
-	//SetSplinesStart(locations);
-
-	//if (IsShowSplines)
-	//{
-	//	UpdateSpline();
-	//}
-	if (IsShowVectors)
-	{
-		//_reCreateVecotrField();
-	}
 }
 
-void AFieldActor::SetVectorFieldResolution(FIntVector vectorFieldResolution)
-{
-	VectorField->Resolution = vectorFieldResolution;
-
-	if (IsShowVectors)
-	{
-		//_reCreateVecotrField();
-	}
-}
-
-void AFieldActor::SetVectorMeshRadiusMultipiler(float vectorMeshRadiusMultipiler)
-{
-	VectorField->VectorMeshRadiusMultipiler = vectorMeshRadiusMultipiler;
-
-	if (IsShowVectors)
-	{
-		//_reCreateVecotrField();
-	}
-}
-
-void AFieldActor::SetIsShowVectors(bool isShowVectors)
-{
-	IsShowVectors = isShowVectors;
-
-	if (IsShowVectors)
-	{
-		//_reCreateVecotrField();
-	}
-	else
-	{
-		//VectorInstancedMesh->ClearInstances();
-	}
-	//VectorInstancedMesh->MarkRenderStateDirty();	// for debug
-}
-
-void AFieldActor::SetSplinePointsLimit(int splinePointsLimit)
-{
-	SplinePointsLimit = splinePointsLimit;
-
-	if (IsShowSplines)
-	{
-		//UpdateSpline(true);
-	}
-}
-
-void AFieldActor::SetSplineResolution(FIntVector splineResolution)
-{
-	SplineResolution = splineResolution;
-
-	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
-	//SetSplinesStart(locations);
-	_updateField();
-}
-
-void AFieldActor::SetSplineCalcStep(float splineCalcStep)
-{
-	if (splineCalcStep > 0)
-	{
-		SplineCalcStep = splineCalcStep;
-	}
-	else
-	{
-		SplineCalcStep = 0.01;
-	}
-
-	if (IsShowSplines)
-	{
-		//UpdateSpline();
-	}
-}
+//void AFieldActor::SetIsShowVectors(bool isShowVectors)
+//{
+//	IsShowVectors = isShowVectors;
+//
+//	if (IsShowVectors)
+//	{
+//		//_reCreateVecotrField();
+//	}
+//	else
+//	{
+//		//VectorInstancedMesh->ClearInstances();
+//	}
+//	//VectorInstancedMesh->MarkRenderStateDirty();	// for debug
+//}
 
 void AFieldActor::SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDelay)
 {
 	SplineParticlesSpawnDelay = newSplineParticlesSpawnDelay;
 }
 
-void AFieldActor::SetCalculatorLyambda(float newLyambda)
+void AFieldActor::SetLyambda(float lyambda)
 {
-	Calculator->Lyambda = newLyambda;
-	//VectorMaterial->SetScalarParameterValue(TEXT("lyambda"), epsilon);
-	//SplineMaterial->SetScalarParameterValue(TEXT("lyambda"), newLyambda);
+	Calculator->Lyambda = lyambda;
+	SplineField->SplineMaterial->SetScalarParameterValue(TEXT("lyambda"), lyambda);
+	SplineField->UpdateSplines();
 
-	_updateField();
+	VectorField->VectorMaterial->SetScalarParameterValue(TEXT("lyambda"), lyambda);
 }
 
 void AFieldActor::SetLowerLimits(FVector newLowerLimits)
 {
 	Calculator->LowerLimits = newLowerLimits;
 	
-	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
-	//SetSplinesStart(locations);
-	_updateField();
-	//_updateCuboidSurface();
+	CuboidSurface->UpdateSurface(Calculator->LowerLimits, Calculator->UpperLimits);
+	SplineField->UpdateSplines(true);
+
+	VectorField->Revisualize();
 }
 
 void AFieldActor::SetUpperLimits(FVector newUpperLimits)
 {
 	Calculator->UpperLimits = newUpperLimits;
 
-	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
-	//SetSplinesStart(locations);
-	_updateField();
-	//_updateCuboidSurface();
-}
+	CuboidSurface->UpdateSurface(Calculator->LowerLimits, Calculator->UpperLimits);
+	SplineField->UpdateSplines(true);
 
-void AFieldActor::SetSplineThickness(float splineThickness)
-{
-	//SplineThickness = splineThickness;
-	SplineField->SplinesThickness = splineThickness;
-
-	SplineField->UpdateSplines();
-
-	/*if (IsShowSplines)
-	{
-		UpdateSpline();
-	}*/
+	VectorField->Revisualize();
 }
 
 void AFieldActor::SetIsShowSplines(bool isShowSplines)
@@ -391,7 +257,7 @@ void AFieldActor::SetSplinesPlane(FaceAxis newSplinePlane)
 {
 	SplinesPlane = newSplinePlane;
 
-	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
+	///TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
 	//SetSplinesStart(locations);
 	//UpdateSpline();
 }
@@ -399,7 +265,7 @@ void AFieldActor::SetIsOppositeSplinesPlane(bool newIsOppositePlane)
 {
 	IsOppositeSplinesPlane = newIsOppositePlane;
 
-	TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
+	//TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
 	//SetSplinesStart(locations);
 
 	//UpdateSpline();
@@ -417,19 +283,18 @@ void AFieldActor::SetCalculator(UCalculator* calculator)
 {
 	Calculator = calculator;
 	_calculator = Calculator;
-	//Calculator->_initMaterial(SplineInstancedMesh);
 
-	// Set material:
 	FString name;
 	Calculator->GetClass()->GetName(name);
 	SplineField->SelectMaterial(name);
+	SplineField->UpdateSplines();
 
-	_updateField();
+	VectorField->Revisualize();
 }
 
 float AFieldActor::GetEpsilon()
 {
-	return Epsilon;
+	return Calculator->Epsilon;
 }
 
 float AFieldActor::GetSizeMultipiler()
@@ -455,11 +320,6 @@ bool AFieldActor::GetIsShowVectors()
 int AFieldActor::GetSplinePointsLimit()
 {
 	return SplinePointsLimit;
-}
-
-FIntVector AFieldActor::GetSplineResolution()
-{
-	return SplineResolution;
 }
 
 float AFieldActor::GetSplineCalcStep()
@@ -569,19 +429,6 @@ void AFieldActor::_updateSplineParticles(float deltaTime)
 	//ParticleInstancedMesh->MarkRenderStateDirty();		// Отрендерить изменения.
 }
 
-void AFieldActor::_updateField()
-{
-	if (IsShowSplines)
-	{
-		//UpdateSpline();
-		//ParticleInstancedMesh->ClearInstances();
-	}
-	if (IsShowVectors)
-	{
-		//_reCreateVecotrField();
-	}
-}
-
 void AFieldActor::AddParticlesToStartPoint()
 {
 	//// Init spline particles:
@@ -611,26 +458,23 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 	//{
 	//	SetVectorMeshRadiusMultipiler(VectorMeshRadiusMultipiler);
 	//}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, IsShowVectors))
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, EditorFlipFlopFieldsUpdate))
 	{
-		SetIsShowVectors(IsShowVectors);
+		SplineField->UpdateSplines();
+		VectorField->Revisualize();
 	}
+	//else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, IsShowVectors))
+	//{
+	//	SetIsShowVectors(IsShowVectors);
+	//}
 	//else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplineMesh))
 	//{
 	//	//SplineInstancedMesh->SetStaticMesh(SplineMesh);
 	//}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplinePointsLimit))
-	{
-		SetSplinePointsLimit(SplinePointsLimit);
-	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplineResolution))
-	{
-		SetSplineResolution(SplineResolution);
-	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplineCalcStep))
-	{
-		SetSplineCalcStep(SplineCalcStep);
-	}
+	//else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplineResolution))
+	//{
+	//	SetSplineResolution(SplineResolution);
+	//}
 	//else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplineThickness))
 	//{
 	//	//SetSplineThickness(SplineThickness);
@@ -638,10 +482,6 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, IsShowSplines))
 	{
 		SetIsShowSplines(IsShowSplines);
-	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, Epsilon))
-	{
-		SetEpsilon(Epsilon);
 	}
 	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SizeMultipiler))
 	{

@@ -110,45 +110,50 @@ FVector UCuboidFace::GetNormalVector()
     return mask;
 }
 
-TArray<FVector> UCuboidFace::GetPointsGrid(float firstAxisRes, float secondAxisRes)    // TODO: FIntVector arg.
+TArray<FVector> UCuboidFace::GetPointsGrid(int firstAxisRes, int secondAxisRes, bool ischeckForActivated)    // TODO: FIntVector arg.
 {
-    TArray<FVector> points = TArray<FVector>();
-
-    double tempX, tempY;
-
-    for (int i = 0; i <= firstAxisRes; i++)
+    if (IsActivated || !ischeckForActivated)
     {
-        tempX = i / firstAxisRes;
+        TArray<FVector> points = TArray<FVector>();
 
-        for (int j = 0; j <= secondAxisRes; j++)
+        double tempX, tempY;
+
+        for (int i = 0; i <= firstAxisRes; i++)
         {
-            tempY = j / secondAxisRes;
+            tempX = i / firstAxisRes;
 
-            FVector point;
-            if (Axis == FaceAxis::XY)
+            for (int j = 0; j <= secondAxisRes; j++)
             {
-                point = FVector(tempX, tempY, 0);
-            }
-            else if (Axis == FaceAxis::XZ)
-            {
-                point = FVector(tempX, 0, tempY);
-            }
-            else if (Axis == FaceAxis::YZ)
-            {
-                point = FVector(0, tempX, tempY);
-            }
+                tempY = j / secondAxisRes;
 
-            if (Position == Back)
-            {
-                point = (StartPoint - EndPoint) * point + EndPoint;
+                FVector point;
+                if (Axis == FaceAxis::XY)
+                {
+                    point = FVector(tempX, tempY, 0);
+                }
+                else if (Axis == FaceAxis::XZ)
+                {
+                    point = FVector(tempX, 0, tempY);
+                }
+                else if (Axis == FaceAxis::YZ)
+                {
+                    point = FVector(0, tempX, tempY);
+                }
+
+                if (Position == Back)
+                {
+                    point = (StartPoint - EndPoint) * point + EndPoint;
+                }
+                else
+                {
+                    point = (EndPoint - StartPoint) * point + StartPoint;
+                }
+                points.Add(point);
             }
-            else
-            {
-                point = (EndPoint - StartPoint) * point + StartPoint;
-            }
-            points.Add(point);
         }
+
+        return points;
     }
 
-    return points;
+    return TArray<FVector>();
 }

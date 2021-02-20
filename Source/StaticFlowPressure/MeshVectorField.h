@@ -26,9 +26,25 @@ public:
 
 	void Revisualize();
 
-	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vector field resolution (number of sensors by axis)")
+	UPROPERTY(EditAnywhere, Category = "Visualisation", DisplayName = "Vector field resolution (number of sensors by axis)")
 		FIntVector Resolution = FIntVector(4, 4, 4);
 
-	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vectors size (multipiler)")
+	UPROPERTY(EditAnywhere, Category = "Visualisation", DisplayName = "Vectors size (multipiler)")
 		float VectorMeshRadiusMultipiler = 0.5;
+
+
+#pragma region setters
+
+	UFUNCTION(BlueprintCallable, Category = "Visualisation")
+		void SetVectorFieldResolution(FIntVector newVectorFieldResolution);
+
+	UFUNCTION(BlueprintCallable, Category = "Visualisation")
+		void SetVectorMeshRadiusMultipiler(float newVectorMeshRadiusMultipiler);
+
+#pragma endregion
+
+protected:
+
+	TArray<FVector> _calculateVectorLocations(FIntVector resolution, bool isApplyBias = true) const;
+
 };

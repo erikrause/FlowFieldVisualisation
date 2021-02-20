@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SplinesStartPlane.h"
 #include "CuboidFace.generated.h"
 
 UENUM()
@@ -43,7 +42,11 @@ public:
 	FVector EndPoint;
 	FVector Bias;
 
-	TArray<FVector> GetPointsGrid(float firstAxisRes, float secondAxisRes);
+	// if IsActive == true, to GetPointsGrid возвращает локации для сплайнов.
+	TArray<FVector> GetPointsGrid(int firstAxisRes, int secondAxisRes, bool ischeckForActivated = true);
 	FVector GetAxisMask();
 	FVector GetNormalVector();
+
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+		bool IsActivated = false;		// if IsActive == true, to GetPointsGrid возвращает локации для сплайнов.
 };

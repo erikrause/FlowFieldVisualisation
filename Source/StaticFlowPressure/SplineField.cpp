@@ -37,27 +37,55 @@ USplineField::USplineField()
 #pragma endregion
 }
 
-USplineField* USplineField::Construct(UCalculator const* const* calculator)
-{
-	USplineField* splineField = NewObject<USplineField>();
-	splineField->Init(calculator);
-	return splineField;
-}
-
-void USplineField::Init(UCalculator const* const* calculator)
+void USplineField::Init(UCalculator const* const* calculator, TArray<ISplinesStartArea*> splinesStartAreas)
 {
 	Calculator = calculator;
+	SplinesStartAreas = splinesStartAreas;
+
+	FString materialName;
+	(*Calculator)->GetClass()->GetName(materialName);
+	SelectMaterial(materialName);
 }
 
-void USplineField::UpdateSplines()
+void USplineField::UpdateSplines(bool isUpdateStartPositions)
 {
+	if (isUpdateStartPositions)
+	{
+		for (USpline* spline : Splines)
+		{
+			if (spline != NULL)
+			{
+				spline->DestroyComponent();
+				// TODO: check for destroy particle instances.
+			}
+		}
+		Splines.Empty();
+
+		for (ISplinesStartArea* area : SplinesStartAreas)
+		{
+			TArray<FVector> locations = area->GetSplinesStartLocations(Resolution);
+			for (FVector location : locations)
+			{
+				USpline* spline = USpline::Construct(location, Calculator);
+				spline->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
+				spline->ClearSplinePoints();		// Удаляет дефолтные точки.
+				//splineComponent->bInputSplinePointsToConstructionScript = true;
+				spline->SetRelativeLocation(location);
+				spline->SetDrawDebug(false);
+				spline->LDMaxDrawDistance = 0;		// ?
+				Splines.Add(spline);
+			}
+		}
+	}
+
+
 	SplineInstancedMesh->ClearInstances();
 
 	// Update curve:
 	ParallelFor(Splines.Num(), [this](int32 i)
 		{
 			//_createSplinePoints(Splines[i], isContinue);
-			Splines[i]->UpdateSpline();
+			Splines[i]->UpdateSpline(this->SplinePointsLimit, this->SplineCalcStep);
 		}, EParallelForFlags::ForceSingleThread);
 
 	// Add mesh to curve:
@@ -83,34 +111,42 @@ void USplineField::UpdateSplines()
 	}
 }
 
-void USplineField::SetSplinesStart(TArray<FVector> locations)
-{
-	for (USpline* spline : Splines)
-	{
-		if (spline != NULL)
-		{
-			spline->DestroyComponent();
-			// TODO: check for destroy particle instances.
-		}
-	}
-	Splines.Empty();
-
-	for (FVector location : locations)
-	{
-		USpline* spline = USpline::Construct(location, Calculator);
-		spline->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
-		spline->ClearSplinePoints();		// Удаляет дефолтные точки.
-		//splineComponent->bInputSplinePointsToConstructionScript = true;
-		spline->SetRelativeLocation(location);
-		spline->SetDrawDebug(false);
-		spline->LDMaxDrawDistance = 0;		// ?
-		Splines.Add(spline);
-	}
-}
-
 void USplineField::SelectMaterial(FString name)
 {
 	SplineMaterial = SplineInstancedMesh->CreateDynamicMaterialInstance(0, SpllineCalculatorsAssets[name]);
+}
+
+void USplineField::SetSplinePointsLimit(int splinePointsLimit)
+{
+	SplinePointsLimit = splinePointsLimit;
+	UpdateSplines();
+}
+
+void USplineField::SetSplineCalcStep(float splineCalcStep)
+{
+	if (splineCalcStep > 0)
+	{
+		SplineCalcStep = splineCalcStep;
+	}
+	else
+	{
+		SplineCalcStep = 0.01;
+	}
+
+	UpdateSplines();
+}
+
+void USplineField::SetSplineThickness(float splineThickness)
+{
+	SplinesThickness = splineThickness;
+	UpdateSplines();
+}
+
+void USplineField::SetResolution(FIntVector resolution)
+{
+	Resolution = resolution;
+
+	UpdateSplines(true);
 }
 
 //TODO: move to UCalculator.

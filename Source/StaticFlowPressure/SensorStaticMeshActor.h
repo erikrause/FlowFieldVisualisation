@@ -69,8 +69,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
 		float SplineCalcStep = 0.1;
 
-	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Spline resolution (number of splines by axis)")
-		FIntVector SplineResolution = FIntVector(20, 20, 1);	// TODO: переделать через плотность.
 	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Splines start axis")
 		FaceAxis SplinesPlane = FaceAxis::XY;
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
@@ -86,8 +84,8 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "General calculation", DisplayName = "Field size (multipiler)")
 		float SizeMultipiler = 200;
-	UPROPERTY(EditAnywhere, Category = "General calculation")
-		float Epsilon = 1;
+	//UPROPERTY(EditAnywhere, Category = "General calculation")
+	//	float Epsilon = 1;
 	UPROPERTY(EditAnywhere, Category = "General calculation")
 		float SimulationTime = 0;
 
@@ -114,6 +112,9 @@ public:
 	UPROPERTY(VisibleAnyWhere, Category = "Spline calsulation")
 		USplineField* SplineField;
 
+	UPROPERTY(EditAnywhere, Category = "Test")
+		bool EditorFlipFlopFieldsUpdate;
+
 #pragma region Setters for uproperties
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		void SetSimulationTime(float time);
@@ -121,26 +122,12 @@ public:
 		void SetEpsilon(float newEpsilon);
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		void SetSizeMultipiler(float newSizeMultipiler);
-	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
-		void SetVectorFieldResolution(FIntVector newVectorFieldResolution);
-	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
-		void SetVectorMeshRadiusMultipiler(float newVectorMeshRadiusMultipiler);
-	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
-		void SetIsShowVectors(bool newIsShowVectors);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetSplinePointsLimit(int newSplinePointsLimit);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetSplineResolution(FIntVector newSplineResolution);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetSplineCalcStep(float newSplineCalcStep);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetSplineThickness(float newSplineThickness);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetIsShowSplines(bool newIsShowSplines);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetParticleSize(float newParticleSize);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetSplinesPlane(FaceAxis newSplinePlane);
+		void SetSplinesPlane(FaceAxis newSplinePlane);	// TODO: SetSplineStartLocations or Add StartLocations.
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetIsOppositeSplinesPlane(bool newIsOppositePlane);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
@@ -148,7 +135,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDelay);
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
-		void SetCalculatorLyambda(float newLyambda);
+		void SetLyambda(float newLyambda);
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		void SetLowerLimits(FVector newLowerLimits);
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
@@ -170,8 +157,6 @@ public:
 		bool GetIsShowVectors();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		int GetSplinePointsLimit();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		FIntVector GetSplineResolution();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		float GetSplineCalcStep();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
@@ -208,8 +193,6 @@ protected:
 
 	//void _createSplinePoints(USplineComponent* splineComponent, bool isContinue = false);
 
-	void _initVisualisation();
-
 	/// <summary>
 	/// Обновляет позиции частиц на сплайнах.
 	/// </summary>
@@ -218,7 +201,4 @@ protected:
 	float _particleTimeCounter = 0;
 
 	//void _updateMaterialParameters(UMaterialInstanceDynamic* vectorMaterial);
-
-
-	void _updateField();
 };

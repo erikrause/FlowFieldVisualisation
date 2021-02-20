@@ -47,7 +47,7 @@ void UMeshVectorField::Revisualize()
 {
 	VectorInstancedMesh->ClearInstances();
 
-	TArray<FVector> locations = (*Calculator)->CalculateLocations(Resolution);
+	TArray<FVector> locations = _calculateVectorLocations(Resolution);
 
 	for (FVector location : locations)
 	{
@@ -66,4 +66,62 @@ void UMeshVectorField::Revisualize()
 
 		VectorInstancedMesh->AddInstance(FTransform(rotation, location, meshRadius));
 	}
+}
+
+TArray<FVector> UMeshVectorField::_calculateVectorLocations(FIntVector resolution, bool isApplyBias) const
+{
+    // Проверка, если одна из осей <= 1 (костыль, TODO):
+    FVector axisMask = FVector(1, 1, 1);
+    
+    for (int axis = 0; axis < 3; axis++)
+    {
+        if (resolution[axis] <= 1)
+        {
+            resolution[axis] = 2;    // минимальное значение, возможное в цикле.
+            axisMask[axis] = 0;     // ось, которая <=, обнулится
+        }
+    }
+
+    double tempX, tempY, tempZ;
+
+    TArray<FVector> locations = TArray<FVector>();
+
+    for (int i = 0; i < resolution.X; i++)
+    {
+        tempX = (double)i / (double)(resolution.X - 1);
+
+        for (int j = 0; j < resolution.Y; j++)
+        {
+            tempY = (double)j / (double)(resolution.Y - 1);
+
+            for (int k = 0; k < resolution.Z; k++)
+            {
+                tempZ = (double)k / (double)(resolution.Z - 1);
+
+                FVector location = FVector(tempX, tempY, tempZ);
+                location *= axisMask;
+
+                if (isApplyBias)
+                {
+                    location = ((*Calculator)->UpperLimits - (*Calculator)->LowerLimits)* location + (*Calculator)->LowerLimits;
+                }
+
+                locations.Add(location);
+            }
+        }
+    }
+
+    return locations;
+}
+
+void UMeshVectorField::SetVectorFieldResolution(FIntVector vectorFieldResolution)
+{
+	Resolution = vectorFieldResolution;
+	Revisualize();
+}
+
+void UMeshVectorField::SetVectorMeshRadiusMultipiler(float vectorMeshRadiusMultipiler)
+{
+	VectorMeshRadiusMultipiler = vectorMeshRadiusMultipiler;
+	Revisualize();
 }

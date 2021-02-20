@@ -22,6 +22,11 @@ UCuboidSurface::UCuboidSurface()
 
 void UCuboidSurface::Init(FVector startPoint, FVector endPoint)
 {
+	UpdateSurface(startPoint, endPoint);
+}
+
+void UCuboidSurface::UpdateSurface(FVector startPoint, FVector endPoint)
+{
 	StartPoint = startPoint;
 	EndPoint = endPoint;
 
@@ -48,4 +53,16 @@ UCuboidFace* UCuboidSurface::GetFaceBy(FaceAxis faceAxis, FacePosition facePosit
 		});
 
 	return *face;
+}
+
+TArray<FVector> UCuboidSurface::GetSplinesStartLocations(FIntVector resolution)
+{
+	TArray<FVector> locations;
+
+	for (UCuboidFace* face : Faces)
+	{
+		locations.Append(face->GetPointsGrid(resolution.X, resolution.Y, IsCheckFaceForActivated));		// TODO: сделать поддержку трезмерного разрешения или переделать через плотность сетки.
+	}
+
+	return locations;
 }

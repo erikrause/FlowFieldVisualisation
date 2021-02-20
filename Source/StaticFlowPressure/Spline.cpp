@@ -16,7 +16,7 @@ void USpline::Init(FVector splineStartPoint, UCalculator const* const* calculato
 	Calculator = calculator;
 }
 
-void USpline::UpdateSpline()
+void USpline::UpdateSpline(int splinePointsLimit, int splineCalcStep)
 {
 	int i;
 	//if (!isContinue)
@@ -27,7 +27,7 @@ void USpline::UpdateSpline()
 	//else
 	//{
 	//	i = GetNumberOfSplinePoints() - 1;
-	//	for (i; i >= SplinePointsLimit; i--)
+	//	for (i; i >= splinePointsLimit; i--)
 	//	{
 	//		splineComponent->RemoveSplinePoint(i, false);
 	//}
@@ -42,12 +42,12 @@ void USpline::UpdateSpline()
 
 	FVector vel = (*Calculator)->Calc_vel(splinePoint);
 	bool isCorrectNormalized = vel.Normalize();
-	FVector newSplinePoint = (splinePoint + vel * SplineCalcStep) - offset;
+	FVector newSplinePoint = (splinePoint + vel * splineCalcStep) - offset;
 	//
 
 	while (newSplinePoint.X + offset.X >= min.X && newSplinePoint.Y + offset.Y >= min.Y && newSplinePoint.Z + offset.Z >= min.Z &&
 		newSplinePoint.X + offset.X <= max.X && newSplinePoint.Y + offset.Y <= max.Y && newSplinePoint.Z + offset.Z <= max.Z &&
-		i < SplinePointsLimit &&
+		i < splinePointsLimit &&
 		newSplinePoint != (GetLocationAtSplinePoint(i - 1, ESplineCoordinateSpace::Local)) &&	// ѕроверка на зацикливание кривой в пределах трех точек.
 		isCorrectNormalized)	// ѕроверка на vel == 0 (например, когда t -> inf).
 	{
@@ -72,7 +72,7 @@ void USpline::UpdateSpline()
 		// Next loop prepare:
 		vel = (*Calculator)->Calc_vel(newSplinePoint + offset);
 		isCorrectNormalized = vel.Normalize();
-		newSplinePoint = (newSplinePoint + vel * SplineCalcStep);
+		newSplinePoint = (newSplinePoint + vel * splineCalcStep);
 		i++;
 	}
 }
