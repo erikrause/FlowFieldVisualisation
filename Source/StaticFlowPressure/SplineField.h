@@ -8,7 +8,7 @@
 #include "SplineField.generated.h"
 
 
-UCLASS()
+UCLASS()//(BlueprintType, meta = (BlueprintSpawnableComponent))
 class STATICFLOWPRESSURE_API USplineField : public USceneComponent
 {
 	GENERATED_BODY()

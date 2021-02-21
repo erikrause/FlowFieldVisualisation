@@ -59,8 +59,7 @@ AFieldActor::AFieldActor()
 
 	CubeCenter = (Calculator->UpperLimits + Calculator->LowerLimits) / 2;
 #if WITH_EDITOR
-	FVector pivotOffset = CubeCenter;
-	SetPivotOffset(pivotOffset);
+	SetPivotOffset(CubeCenter);
 #endif
 
 #pragma region Creating cuboid surface
@@ -99,6 +98,12 @@ void AFieldActor::PostActorCreated()	// Вызывается при созданни в редакторе или 
 void AFieldActor::OnConstruction(const FTransform& transform)
 {
 	Super::OnConstruction(transform);
+	
+	SetSizeMultipiler(GetActorScale3D().X);
+	CubeCenter = (Calculator->UpperLimits + Calculator->LowerLimits) / 2;
+#if WITH_EDITOR
+	SetPivotOffset(CubeCenter * GetSizeMultipiler());
+#endif
 
 	SetCalculator(NewObject<UPaperTest>());
 	UCuboidFace* cuboidFace = CuboidSurface->GetFaceBy(FaceAxis::XY, FacePosition::Front);
@@ -299,7 +304,7 @@ float AFieldActor::GetEpsilon()
 
 float AFieldActor::GetSizeMultipiler()
 {
-	return SizeMultipiler;
+	return GetActorScale3D().X;
 }
 
 FIntVector AFieldActor::GetVectorFieldResolution()

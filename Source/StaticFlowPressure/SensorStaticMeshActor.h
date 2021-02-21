@@ -82,8 +82,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
 		int SplinePointsLimit = 500;
 
-	UPROPERTY(EditAnywhere, Category = "General calculation", DisplayName = "Field size (multipiler)")
-		float SizeMultipiler = 200;
+	float SizeMultipiler = 200;
+
 	//UPROPERTY(EditAnywhere, Category = "General calculation")
 	//	float Epsilon = 1;
 	UPROPERTY(EditAnywhere, Category = "General calculation")
@@ -97,9 +97,9 @@ public:
 	void AddParticlesToStartPoint();
 
 	FVector CubeCenter;
-	UPROPERTY(VisibleAnywhere, Category = "Visualisation")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
 		UCuboidSurface* CuboidSurface;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
 	TArray<UStaticMeshComponent*> CuboidFacesMeshes;
 
 	UPROPERTY(EditAnywhere, Category = "General calculation")
@@ -109,7 +109,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
 		float SplineParticlesSpawnDelay = 1;
 
-	UPROPERTY(VisibleAnyWhere, Category = "Spline calsulation")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spline calsulation")
 		USplineField* SplineField;
 
 	UPROPERTY(EditAnywhere, Category = "Test")
