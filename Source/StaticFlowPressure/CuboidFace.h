@@ -14,7 +14,7 @@ enum class FaceAxis : uint8
 };
 
 UENUM()
-enum FacePosition
+enum class FacePosition : uint8
 {
 	Front,
 	Back

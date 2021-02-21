@@ -23,7 +23,7 @@ public:
 	FVector SplineStartPoint;
 	UCalculator const* const* Calculator;
 
-	void UpdateSpline(int splinePointsLimit, int splineCalcStep);
+	void UpdateSpline(int splinePointsLimit, float splineCalcStep);
 
 	/// <summary>
 	/// Частицы, принадлежащие этому сплайну.

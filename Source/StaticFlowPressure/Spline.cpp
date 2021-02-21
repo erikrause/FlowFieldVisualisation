@@ -16,7 +16,7 @@ void USpline::Init(FVector splineStartPoint, UCalculator const* const* calculato
 	Calculator = calculator;
 }
 
-void USpline::UpdateSpline(int splinePointsLimit, int splineCalcStep)
+void USpline::UpdateSpline(int splinePointsLimit, float splineCalcStep)
 {
 	int i;
 	//if (!isContinue)

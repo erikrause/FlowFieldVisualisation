@@ -287,7 +287,7 @@ void AFieldActor::SetCalculator(UCalculator* calculator)
 	FString name;
 	Calculator->GetClass()->GetName(name);
 	SplineField->SelectMaterial(name);
-	SplineField->UpdateSplines();
+	SplineField->UpdateSplines(true);
 
 	VectorField->Revisualize();
 }

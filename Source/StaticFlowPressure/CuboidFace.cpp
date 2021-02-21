@@ -36,7 +36,7 @@ void UCuboidFace::Init(FVector cuboidStartPoint, FVector cuboidEndPoint, FaceAxi
     Axis = axis;
     Position = facePosition;
 
-    if (Position == Front)
+    if (Position == FacePosition::Front)
     {
         StartPoint = cuboidStartPoint;
         EndPoint = (cuboidEndPoint * GetAxisMask()) + (cuboidStartPoint * GetNormalVector());
@@ -116,15 +116,15 @@ TArray<FVector> UCuboidFace::GetPointsGrid(int firstAxisRes, int secondAxisRes, 
     {
         TArray<FVector> points = TArray<FVector>();
 
-        double tempX, tempY;
+        float tempX, tempY;
 
         for (int i = 0; i <= firstAxisRes; i++)
         {
-            tempX = i / firstAxisRes;
+            tempX = i / (float)firstAxisRes;
 
             for (int j = 0; j <= secondAxisRes; j++)
             {
-                tempY = j / secondAxisRes;
+                tempY = j / (float)secondAxisRes;
 
                 FVector point;
                 if (Axis == FaceAxis::XY)
@@ -140,7 +140,7 @@ TArray<FVector> UCuboidFace::GetPointsGrid(int firstAxisRes, int secondAxisRes, 
                     point = FVector(0, tempX, tempY);
                 }
 
-                if (Position == Back)
+                if (Position == FacePosition::Back)
                 {
                     point = (StartPoint - EndPoint) * point + EndPoint;
                 }

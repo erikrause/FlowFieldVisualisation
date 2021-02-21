@@ -1,5 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
+PRAGMA_DISABLE_OPTIMIZATION
 
 #include "CuboidSurface.h"
 
