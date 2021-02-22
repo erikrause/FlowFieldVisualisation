@@ -25,13 +25,9 @@ USplineField::USplineField()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> splineAsset(TEXT("/Game/SplineMesh.SplineMesh"));
 	SplineMesh = splineAsset.Object;
 	SplineInstancedMesh->SetStaticMesh(SplineMesh);
-	// Set material:
-	ConstructorHelpers::FObjectFinder<UMaterial> splineMaterialAsset(TEXT("Material'/Game/SplineMaterials/SplineMaterial_Test2.SplineMaterial_Test2'"));
-	//SplineMaterial = UMaterialInstanceDynamic::Create(splineMaterialAsset.Object, SplineInstancedMesh, FName("SplineMatreial"));
-	//SplineInstancedMesh->SetMaterial(0, SplineMaterial);
-	//SplineInstancedMesh->CreateAndSetMaterialInstanceDynamicFromMaterial(0, SplineMaterial);
-	SplineMaterial = SplineInstancedMesh->CreateDynamicMaterialInstance(0, splineMaterialAsset.Object);
-
+	//// Set material:
+	//ConstructorHelpers::FObjectFinder<UMaterial> splineMaterialAsset(TEXT("Material'/Game/SplineMaterials/SplineMaterial_Test2.SplineMaterial_Test2'"));
+	//SplineMaterial = SplineInstancedMesh->CreateDynamicMaterialInstance(0, splineMaterialAsset.Object);
 	_initSplineCalculatorsAssets();
 
 #pragma endregion
@@ -113,7 +109,11 @@ void USplineField::UpdateSplines(bool isUpdateStartPositions)
 
 void USplineField::SelectMaterial(FString name)
 {
-	SplineMaterial = SplineInstancedMesh->CreateDynamicMaterialInstance(0, SpllineCalculatorsAssets[name]);
+	//SplineMaterial = SplineInstancedMesh->CreateAndSetMaterialInstanceDynamicFromMaterial(0, SpllineCalculatorsAssets[name]);
+	//SplineMaterial = SplineInstancedMesh->CreateDynamicMaterialInstance(0, SpllineCalculatorsAssets[name]);
+
+	SplineMaterial = UMaterialInstanceDynamic::Create(SpllineCalculatorsAssets[name], this);
+	SplineInstancedMesh->SetMaterial(0, SplineMaterial);
 }
 
 void USplineField::SetSplinePointsLimit(int splinePointsLimit)
@@ -149,6 +149,26 @@ void USplineField::SetResolution(FIntVector resolution)
 	UpdateSplines(true);
 }
 
+int USplineField::GetSplinePointsLimit()
+{
+	return SplinePointsLimit;
+}
+
+float USplineField::GetSplineCalcStep()
+{
+	return SplineCalcStep;
+}
+
+float USplineField::GetSplineThickness()
+{
+	return SplinesThickness;
+}
+
+FIntVector USplineField::GetResolution()
+{
+	return Resolution;
+}
+
 //TODO: move to UCalculator.
 void USplineField::_initSplineCalculatorsAssets()
 {
@@ -174,4 +194,5 @@ void USplineField::_addSplineCalculatorAsset(FString name)
 	ConstructorHelpers::FObjectFinder<UMaterial> splineMaterialAsset(*materialName);
 
 	SpllineCalculatorsAssets.Add(name, splineMaterialAsset.Object);
+	_spllineCalculatorsAssetsGCDuplicate.Add(name, splineMaterialAsset.Object);
 }

@@ -29,6 +29,7 @@ public:
 	UPROPERTY()
 		TArray<USpline*> Splines;
 
+	UPROPERTY()
 	UMaterialInstanceDynamic* SplineMaterial;
 
 	UInstancedStaticMeshComponent* SplineInstancedMesh;
@@ -37,6 +38,7 @@ public:
 		UStaticMesh* SplineMesh;
 
 	TMap<FString, UMaterial*> SpllineCalculatorsAssets;
+	TMap<FString, UMaterial*> _spllineCalculatorsAssetsGCDuplicate;
 
 	void SelectMaterial(FString name);
 
@@ -50,7 +52,7 @@ public:
 		FIntVector Resolution = FIntVector(20, 20, 1);	// TODO: переделать через плотность.
 
 
-#pragma region setters
+#pragma region Setters
 
 	UFUNCTION(BlueprintCallable, Category = "Visualisation")
 		void SetSplinePointsLimit(int newSplinePointsLimit);
@@ -60,6 +62,20 @@ public:
 		void SetSplineThickness(float newSplineThickness);
 	UFUNCTION(BlueprintCallable, Category = "Visualisation")
 		void SetResolution(FIntVector newResolution);
+
+#pragma endregion
+
+
+#pragma region Getters
+
+	UFUNCTION(BlueprintCallable, Category = "Visualisation")
+		int GetSplinePointsLimit();
+	UFUNCTION(BlueprintCallable, Category = "Visualisation")
+		float GetSplineCalcStep();
+	UFUNCTION(BlueprintCallable, Category = "Visualisation")
+		float GetSplineThickness();
+	UFUNCTION(BlueprintCallable, Category = "Visualisation")
+		FIntVector GetResolution();
 
 #pragma endregion
 

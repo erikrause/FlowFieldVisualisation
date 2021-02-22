@@ -114,7 +114,7 @@ TArray<FVector> UMeshVectorField::_calculateVectorLocations(FIntVector resolutio
     return locations;
 }
 
-void UMeshVectorField::SetVectorFieldResolution(FIntVector vectorFieldResolution)
+void UMeshVectorField::SetResolution(FIntVector vectorFieldResolution)
 {
 	Resolution = vectorFieldResolution;
 	Revisualize();
@@ -124,4 +124,14 @@ void UMeshVectorField::SetVectorMeshRadiusMultipiler(float vectorMeshRadiusMulti
 {
 	VectorMeshRadiusMultipiler = vectorMeshRadiusMultipiler;
 	Revisualize();
+}
+
+FIntVector UMeshVectorField::GetResolution()
+{
+	return Resolution;
+}
+
+float UMeshVectorField::GetVectorMeshRadiusMultipiler()
+{
+	return VectorMeshRadiusMultipiler;
 }

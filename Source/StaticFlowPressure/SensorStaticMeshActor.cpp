@@ -98,6 +98,8 @@ void AFieldActor::PostActorCreated()	// Вызывается при созданни в редакторе или 
 void AFieldActor::OnConstruction(const FTransform& transform)
 {
 	Super::OnConstruction(transform);
+
+	SetCalculator(NewObject<UPaperTest>());	// Костыль, т.к. калькулятор сбрасывается в NULL.
 	
 	SetSizeMultipiler(GetActorScale3D().X);
 	CubeCenter = (Calculator->UpperLimits + Calculator->LowerLimits) / 2;
@@ -105,7 +107,6 @@ void AFieldActor::OnConstruction(const FTransform& transform)
 	SetPivotOffset(CubeCenter * GetSizeMultipiler());
 #endif
 
-	SetCalculator(NewObject<UPaperTest>());
 	UCuboidFace* cuboidFace = CuboidSurface->GetFaceBy(FaceAxis::XY, FacePosition::Front);
 	cuboidFace->IsActivated = true;
 	SplineField->UpdateSplines(true);
@@ -143,10 +144,10 @@ void AFieldActor::SetSimulationTime(float time)
 	float deltaTime = time - SimulationTime;
 	SimulationTime = time;
 
-	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::SanitizeFloat(SimulationTime));
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::SanitizeFloat(SimulationTime));
 	
-	//VectorMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
-	//SplineMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
+	VectorField->VectorMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
+	SplineField->SplineMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
 
 	if (IsShowSplines)
 	{
@@ -179,6 +180,12 @@ void AFieldActor::SetSizeMultipiler(float sizeMultipiler)
 {
 	SizeMultipiler = sizeMultipiler;
 	SetActorRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
+
+	SplineField->SplineMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
+	VectorField->VectorMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
+
+
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::SanitizeFloat(SizeMultipiler));
 }
 
 //void AFieldActor::SetIsShowVectors(bool isShowVectors)
@@ -258,23 +265,7 @@ void AFieldActor::SetParticleSize(float particleSize)
 
 	AddParticlesToStartPoint();		//TODO: проверить, нужна ли эта строка?
 }
-void AFieldActor::SetSplinesPlane(FaceAxis newSplinePlane)
-{
-	SplinesPlane = newSplinePlane;
 
-	///TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
-	//SetSplinesStart(locations);
-	//UpdateSpline();
-}
-void AFieldActor::SetIsOppositeSplinesPlane(bool newIsOppositePlane)
-{
-	IsOppositeSplinesPlane = newIsOppositePlane;
-
-	//TArray<FVector> locations = Calculator->CalculateFlatLocations(SplineResolution.X, SplineResolution.Y, SplinesPlane, IsOppositeSplinesPlane);
-	//SetSplinesStart(locations);
-
-	//UpdateSpline();
-}
 #pragma endregion
 
 #pragma region Getters for uproperties
@@ -307,29 +298,9 @@ float AFieldActor::GetSizeMultipiler()
 	return GetActorScale3D().X;
 }
 
-FIntVector AFieldActor::GetVectorFieldResolution()
-{
-	return VectorField->Resolution;
-}
-
-float AFieldActor::GetVectorMeshRadiusMultipiler()
-{
-	return VectorField->VectorMeshRadiusMultipiler;
-}
-
 bool AFieldActor::GetIsShowVectors()
 {
 	return IsShowVectors;
-}
-
-int AFieldActor::GetSplinePointsLimit()
-{
-	return SplinePointsLimit;
-}
-
-float AFieldActor::GetSplineCalcStep()
-{
-	return SplineCalcStep;
 }
 
 float AFieldActor::GetSplineParticlesSpawnDelay()
@@ -337,7 +308,7 @@ float AFieldActor::GetSplineParticlesSpawnDelay()
 	return SplineParticlesSpawnDelay;
 }
 
-float AFieldActor::GetCalculatorLyambda()
+float AFieldActor::GetLyambda()
 {
 	return Calculator->Lyambda;
 }
@@ -352,11 +323,6 @@ FVector AFieldActor::GetUpperLimits()
 	return Calculator->UpperLimits;
 }
 
-float AFieldActor::GetSplineThickness()
-{
-	return SplineField->SplinesThickness;
-}
-
 bool AFieldActor::GetIsShowSplines()
 {
 	return IsShowSplines;
@@ -365,14 +331,6 @@ bool AFieldActor::GetIsShowSplines()
 float AFieldActor::GetParticleSize()
 {
 	return ParticleSize;
-}
-FaceAxis AFieldActor::GetSplinesPlane()
-{
-	return SplinesPlane;
-}
-bool AFieldActor::GetIsOppositeSplinesPlane()
-{
-	return IsOppositeSplinesPlane;
 }
 #pragma endregion
 
@@ -451,10 +409,6 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 
 	FName PropertyName = (e.Property != NULL) ? e.MemberProperty->GetFName() : NAME_None;
 
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, VectorMesh))
-	{
-		//VectorInstancedMesh->SetStaticMesh(VectorMesh);
-	}
 	//else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, VectorFieldResolution))
 	//{
 	//	SetVectorFieldResolution(VectorFieldResolution);
@@ -463,7 +417,7 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 	//{
 	//	SetVectorMeshRadiusMultipiler(VectorMeshRadiusMultipiler);
 	//}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, EditorFlipFlopFieldsUpdate))
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, EditorFlipFlopFieldsUpdate))
 	{
 		SplineField->UpdateSplines();
 		VectorField->Revisualize();
@@ -488,10 +442,10 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 	{
 		SetIsShowSplines(IsShowSplines);
 	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SizeMultipiler))
-	{
-		SetSizeMultipiler(SizeMultipiler);
-	}
+	//else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SizeMultipiler))
+	//{
+	//	SetSizeMultipiler(SizeMultipiler);
+	//}
 	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SimulationTime))
 	{
 		SetSimulationTime(SimulationTime);
@@ -499,14 +453,6 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, ParticleSize))
 	{
 		SetParticleSize(ParticleSize);
-	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SplinesPlane))
-	{
-		SetSplinesPlane(SplinesPlane);
-	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, IsOppositeSplinesPlane))
-	{
-		SetIsOppositeSplinesPlane(IsOppositeSplinesPlane);
 	}
 	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, Calculator))
 	{

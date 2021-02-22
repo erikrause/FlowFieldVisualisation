@@ -33,13 +33,22 @@ public:
 		float VectorMeshRadiusMultipiler = 0.5;
 
 
-#pragma region setters
+#pragma region Setters
 
 	UFUNCTION(BlueprintCallable, Category = "Visualisation")
-		void SetVectorFieldResolution(FIntVector newVectorFieldResolution);
+		void SetResolution(FIntVector newVectorFieldResolution);
 
 	UFUNCTION(BlueprintCallable, Category = "Visualisation")
 		void SetVectorMeshRadiusMultipiler(float newVectorMeshRadiusMultipiler);
+
+#pragma endregion
+
+#pragma region Getters
+
+	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
+		FIntVector GetResolution();
+	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
+		float GetVectorMeshRadiusMultipiler();
 
 #pragma endregion
 

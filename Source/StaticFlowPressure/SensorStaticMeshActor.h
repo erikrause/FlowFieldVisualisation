@@ -58,29 +58,16 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
 		float ParticleSize = 15;
 
-	UPROPERTY(EditAnywhere, Category = "Vector calculation")
-		UStaticMesh* VectorMesh;
-
 	//UMaterialInstanceDynamic* SplineMaterial;
 	//UInstancedStaticMeshComponent* SplineInstancedMesh;
 	//UPROPERTY(EditAnywhere, Category = "Spline calculation")
 	//	UStaticMesh* SplineMesh;
-
-	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		float SplineCalcStep = 0.1;
-
-	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Splines start axis")
-		FaceAxis SplinesPlane = FaceAxis::XY;
-	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		bool IsOppositeSplinesPlane = false;
 
 	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Show vector field")
 		bool IsShowVectors = true;
 
 	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Show splines")
 		bool IsShowSplines = true;
-	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		int SplinePointsLimit = 500;
 
 	float SizeMultipiler = 200;
 
@@ -127,10 +114,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetParticleSize(float newParticleSize);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetSplinesPlane(FaceAxis newSplinePlane);	// TODO: SetSplineStartLocations or Add StartLocations.
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetIsOppositeSplinesPlane(bool newIsOppositePlane);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetCalculator(UCalculator* newCalculator);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDelay);
@@ -150,29 +133,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		float GetSizeMultipiler();
 	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
-		FIntVector GetVectorFieldResolution();
-	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
-		float GetVectorMeshRadiusMultipiler();
-	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
 		bool GetIsShowVectors();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		int GetSplinePointsLimit();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		float GetSplineCalcStep();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		float GetSplineThickness();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		bool GetIsShowSplines();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		float GetParticleSize();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		FaceAxis GetSplinesPlane();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		bool GetIsOppositeSplinesPlane();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		float GetSplineParticlesSpawnDelay();
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
-		float GetCalculatorLyambda();
+		float GetLyambda();
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		FVector GetLowerLimits();
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
