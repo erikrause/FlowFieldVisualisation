@@ -142,12 +142,16 @@ void AFieldActor::OnConstruction(const FTransform& transform)
 void AFieldActor::SetSimulationTime(float time)
 {
 	float deltaTime = time - SimulationTime;
-	SimulationTime = time;
+	SimulationTime = time;	// TODO: move to Calculator.
 
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::SanitizeFloat(SimulationTime));
+	Calculator->Time = SimulationTime;
+
+	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::SanitizeFloat(SimulationTime));
 	
-	VectorField->VectorMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
-	SplineField->SplineMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
+	VectorField->VectorMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);		// TODO: move to Revisualize()?
+	SplineField->SplineMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);		// TODO: move to UpdateSpline()?
+
+	SplineField->UpdateSplines();
 
 	if (IsShowSplines)
 	{
@@ -183,9 +187,6 @@ void AFieldActor::SetSizeMultipiler(float sizeMultipiler)
 
 	SplineField->SplineMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
 	VectorField->VectorMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
-
-
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::SanitizeFloat(SizeMultipiler));
 }
 
 //void AFieldActor::SetIsShowVectors(bool isShowVectors)

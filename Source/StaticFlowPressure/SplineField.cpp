@@ -74,15 +74,14 @@ void USplineField::UpdateSplines(bool isUpdateStartPositions)
 		}
 	}
 
-
-	SplineInstancedMesh->ClearInstances();
-
 	// Update curve:
 	ParallelFor(Splines.Num(), [this](int32 i)
 		{
 			//_createSplinePoints(Splines[i], isContinue);
 			Splines[i]->UpdateSpline(this->SplinePointsLimit, this->SplineCalcStep);
-		}, EParallelForFlags::ForceSingleThread);
+		}, EParallelForFlags::None);
+
+	SplineInstancedMesh->ClearInstances();
 
 	// Add mesh to curve:
 	for (USpline* spline : Splines)
