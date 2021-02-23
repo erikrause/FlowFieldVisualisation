@@ -93,9 +93,6 @@ public:
 		UCalculator* Calculator;//new UTest1::UTest1();
 	UCalculator* _calculator;	// Костыль для сборщика мусора.
 
-	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		float SplineParticlesSpawnDelay = 1;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spline calsulation")
 		USplineField* SplineField;
 
@@ -115,8 +112,6 @@ public:
 		void SetParticleSize(float newParticleSize);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetCalculator(UCalculator* newCalculator);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDelay);
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		void SetLyambda(float newLyambda);
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
@@ -138,8 +133,6 @@ public:
 		bool GetIsShowSplines();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		float GetParticleSize();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		float GetSplineParticlesSpawnDelay();
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		float GetLyambda();
 	UFUNCTION(BlueprintCallable, Category = "General calculation")

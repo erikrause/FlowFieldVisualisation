@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Particle.h"
 #include "Components/SplineComponent.h"
 #include "Calculator.h"
 #include "Spline.generated.h"
@@ -17,16 +18,19 @@ class STATICFLOWPRESSURE_API USpline : public USplineComponent
 	
 public:
 
-	static USpline* Construct(FVector splineStartPoint, UCalculator const* const* calculator);
-	void Init(FVector splineStartPoint, UCalculator const* const* calculator);
+	static USpline* Construct(FVector startPoint, UCalculator const* const* calculator);
+	void Init(FVector startPoint, UCalculator const* const* calculator);
 
-	FVector SplineStartPoint;
+	FVector StartPoint;
 	UCalculator const* const* Calculator;
 
-	void UpdateSpline(int splinePointsLimit, float splineCalcStep);
+	void UpdateSpline(int curvePointsLimit, float curveStep);
+	void SpawnParticle(float distance);
+	void UpdateParticles(float deltaTime);
 
 	/// <summary>
 	/// Частицы, принадлежащие этому сплайну.
 	/// </summary>
-	TArray<int> ParticleIds;
+	//TArray<int> ParticleIds;
+	TArray<SplineParticle*> Particles;
 };

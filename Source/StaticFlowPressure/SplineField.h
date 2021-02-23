@@ -24,7 +24,8 @@ public:
 
 	TArray<ISplinesStartArea*> SplinesStartAreas;
 
-	void UpdateSplines(bool isUpdateStartPositions = false);
+	void UpdateSplines(float deltaTime, bool isUpdateStartPositions = false);
+	void SpawnParticlesOnSplines(float distance);		// Создает частицы в сплайне с определенным расстоянием от старта.
 
 	UPROPERTY()
 		TArray<USpline*> Splines;
@@ -33,9 +34,13 @@ public:
 	UMaterialInstanceDynamic* SplineMaterial;
 
 	UInstancedStaticMeshComponent* SplineInstancedMesh;
+	UInstancedStaticMeshComponent* ParticleInstancedMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Visualisation")
 		UStaticMesh* SplineMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Visualisation")
+		UStaticMesh* ParticleMesh;
 
 	TMap<FString, UMaterial*> SpllineCalculatorsAssets;
 	TMap<FString, UMaterial*> _spllineCalculatorsAssetsGCDuplicate;
@@ -50,6 +55,10 @@ public:
 		float SplineCalcStep = 0.1;
 	UPROPERTY(EditAnywhere, Category = "Visualisation", DisplayName = "Spline resolution (number of splines by axis)")
 		FIntVector Resolution = FIntVector(20, 20, 1);	// TODO: переделать через плотность.
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		float SplineParticlesSpawnDelay = 1;
+	UPROPERTY(EditAnywhere, Category = "Spline calculation")
+		float ParticleSize = 0.075;
 
 
 #pragma region Setters
@@ -62,6 +71,8 @@ public:
 		void SetSplineThickness(float newSplineThickness);
 	UFUNCTION(BlueprintCallable, Category = "Visualisation")
 		void SetResolution(FIntVector newResolution);
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		void SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDelay);
 
 #pragma endregion
 
@@ -76,6 +87,8 @@ public:
 		float GetSplineThickness();
 	UFUNCTION(BlueprintCallable, Category = "Visualisation")
 		FIntVector GetResolution();
+	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+		float GetSplineParticlesSpawnDelay();
 
 #pragma endregion
 
@@ -85,4 +98,6 @@ protected:
 	void _initSplineCalculatorsAssets();
 
 	void _addSplineCalculatorAsset(FString name);
+
+	float _particleSpawnTimeCounter;
 };

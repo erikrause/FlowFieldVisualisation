@@ -10,7 +10,7 @@ USplineField::USplineField()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
-#pragma region Creating splines
+#pragma region Init splines asset
 
 	SplineInstancedMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*FString("SplineInstancedMesh"));
 	SplineInstancedMesh->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
@@ -31,6 +31,26 @@ USplineField::USplineField()
 	_initSplineCalculatorsAssets();
 
 #pragma endregion
+
+///////////////////////////////////
+
+#pragma region Init particles asset
+
+	ParticleInstancedMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*FString("ParticleInstancedMesh"));
+	ParticleInstancedMesh->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
+
+	// Оптимизации
+	ParticleInstancedMesh->SetCollisionProfileName(FName("NoCollision"), false);
+	ParticleInstancedMesh->SetCastShadow(false);
+	ParticleInstancedMesh->SetLightAttachmentsAsGroup(true);
+	ParticleInstancedMesh->SetRenderCustomDepth(true);
+
+	// Set mesh asset:
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> particleAsset(TEXT("/Game/SplineParticleMesh.SplineParticleMesh"));
+	ParticleMesh = particleAsset.Object;
+	ParticleInstancedMesh->SetStaticMesh(ParticleMesh);
+
+#pragma endregion
 }
 
 void USplineField::Init(UCalculator const* const* calculator, TArray<ISplinesStartArea*> splinesStartAreas)
@@ -43,8 +63,10 @@ void USplineField::Init(UCalculator const* const* calculator, TArray<ISplinesSta
 	SelectMaterial(materialName);
 }
 
-void USplineField::UpdateSplines(bool isUpdateStartPositions)
+void USplineField::UpdateSplines(float deltaTime, bool isUpdateStartPositions)
 {
+
+#pragma region Update splines start position
 	if (isUpdateStartPositions)
 	{
 		for (USpline* spline : Splines)
@@ -73,21 +95,48 @@ void USplineField::UpdateSplines(bool isUpdateStartPositions)
 			}
 		}
 	}
+#pragma endregion
 
-	// Update curve:
-	ParallelFor(Splines.Num(), [this](int32 i)
+
+#pragma region Spawn particles
+
+	_particleSpawnTimeCounter += deltaTime;
+
+	if (_particleSpawnTimeCounter > SplineParticlesSpawnDelay)
+	{
+		_particleSpawnTimeCounter = 0;
+		SpawnParticlesOnSplines(0);
+	}
+	else if (_particleSpawnTimeCounter < 0)	// TODO: Обработать перемотку назад.
+	{
+		_particleSpawnTimeCounter = 0;
+	}
+
+#pragma endregion
+
+
+#pragma region Update splines points
+
+	ParallelFor(Splines.Num(), [this, deltaTime](int32 i)
 		{
 			//_createSplinePoints(Splines[i], isContinue);
 			Splines[i]->UpdateSpline(this->SplinePointsLimit, this->SplineCalcStep);
-		}, EParallelForFlags::None);
+			Splines[i]->UpdateParticles(deltaTime);
+		}, EParallelForFlags::ForceSingleThread);
+
+#pragma endregion
+
+
+#pragma region Update spline and particle visualisation
 
 	SplineInstancedMesh->ClearInstances();
+	ParticleInstancedMesh->ClearInstances();
 
-	// Add mesh to curve:
 	for (USpline* spline : Splines)
 	{
 		FVector offset = spline->GetRelativeLocation();
 
+		// Update spline instanced mesh:
 		for (int pointIndex = 1; pointIndex < spline->GetNumberOfSplinePoints(); pointIndex++)
 		{
 			FVector startPoint = spline->GetLocationAtSplinePoint(pointIndex - 1, ESplineCoordinateSpace::Local) + offset;
@@ -103,6 +152,26 @@ void USplineField::UpdateSplines(bool isUpdateStartPositions)
 			SplineInstancedMesh->AddInstance(FTransform(rotation, (endPoint), scale));
 			//_mutex.Unlock();
 		}
+
+		// Update particle instanced mesh:
+		for (SplineParticle* particle : spline->Particles)
+		{
+			FVector scale = FVector(0.01, 0.01, 0.01) * ParticleSize;
+			FVector location = spline->GetLocationAtDistanceAlongSpline(particle->Distance, ESplineCoordinateSpace::Local) + offset;
+			FRotator rotation = FRotator(0, 0, 0);
+
+			ParticleInstancedMesh->AddInstance(FTransform(rotation, location, scale));
+		}
+	}
+#pragma endregion
+
+}
+
+void USplineField::SpawnParticlesOnSplines(float distance)
+{
+	for (USpline* spline : Splines)
+	{
+		spline->SpawnParticle(distance);
 	}
 }
 
@@ -118,7 +187,7 @@ void USplineField::SelectMaterial(FString name)
 void USplineField::SetSplinePointsLimit(int splinePointsLimit)
 {
 	SplinePointsLimit = splinePointsLimit;
-	UpdateSplines();
+	UpdateSplines(0);
 }
 
 void USplineField::SetSplineCalcStep(float splineCalcStep)
@@ -132,20 +201,25 @@ void USplineField::SetSplineCalcStep(float splineCalcStep)
 		SplineCalcStep = 0.01;
 	}
 
-	UpdateSplines();
+	UpdateSplines(0);
 }
 
 void USplineField::SetSplineThickness(float splineThickness)
 {
 	SplinesThickness = splineThickness;
-	UpdateSplines();
+	UpdateSplines(0);
 }
 
 void USplineField::SetResolution(FIntVector resolution)
 {
 	Resolution = resolution;
 
-	UpdateSplines(true);
+	UpdateSplines(0, true);
+}
+
+void USplineField::SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDelay)
+{
+	SplineParticlesSpawnDelay = newSplineParticlesSpawnDelay;
 }
 
 int USplineField::GetSplinePointsLimit()
@@ -166,6 +240,11 @@ float USplineField::GetSplineThickness()
 FIntVector USplineField::GetResolution()
 {
 	return Resolution;
+}
+
+float USplineField::GetSplineParticlesSpawnDelay()
+{
+	return SplineParticlesSpawnDelay;
 }
 
 //TODO: move to UCalculator.

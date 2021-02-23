@@ -11,9 +11,6 @@ PRAGMA_DISABLE_OPTIMIZATION
 
 AFieldActor::AFieldActor()
 {
-	//UCuboidFace* prob = UCuboidFace::Construct(FVector(2, 2, 2), FVector(6, 6, 6), FaceAxis::XY, FacePosition::Front);
-	//auto arr = prob->GetFacePointsGrid(4, 4);
-
 	PrimaryActorTick.bCanEverTick = true;
 
 	USceneComponent* root = CreateDefaultSubobject<USceneComponent>("Root");
@@ -27,27 +24,6 @@ AFieldActor::AFieldActor()
 
 	#pragma endregion
 
-// здесь создавались сплайны. TODO: вставить SplineField.
-
-	#pragma region Creating particles on splines
-
-	//ParticleInstancedMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(*FString("ParticleInstancedMesh"));
-	//ParticleInstancedMesh->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-	//ParticleInstancedMesh->SetRelativeScale3D(FVector(SizeMultipiler, SizeMultipiler, SizeMultipiler));
-
-	//// Оптимизации
-	//ParticleInstancedMesh->SetCollisionProfileName(FName("NoCollision"), false);
-	//ParticleInstancedMesh->SetCastShadow(false);
-	//ParticleInstancedMesh->SetLightAttachmentsAsGroup(true);
-	//ParticleInstancedMesh->SetRenderCustomDepth(true);
-
-	//// Set mesh asset:
-	//static ConstructorHelpers::FObjectFinder<UStaticMesh> splineParticleAsset(TEXT("/Game/SplineParticleMesh.SplineParticleMesh"));
-	//ParticleMesh = splineParticleAsset.Object;
-	//ParticleInstancedMesh->SetStaticMesh(ParticleMesh);
-
-	#pragma endregion
-	
 	// Moved to Splines classes?
 	//SplineMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
 	//SplineMaterial->SetScalarParameterValue(TEXT("epsilon"), Epsilon);
@@ -109,11 +85,8 @@ void AFieldActor::OnConstruction(const FTransform& transform)
 
 	UCuboidFace* cuboidFace = CuboidSurface->GetFaceBy(FaceAxis::XY, FacePosition::Front);
 	cuboidFace->IsActivated = true;
-	SplineField->UpdateSplines(true);
-
+	SplineField->UpdateSplines(0, true);
 	VectorField->Revisualize();
-
-	int prob = 0;
 
 #pragma region Updating splines
 	/*
@@ -151,22 +124,22 @@ void AFieldActor::SetSimulationTime(float time)
 	VectorField->VectorMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);		// TODO: move to Revisualize()?
 	SplineField->SplineMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);		// TODO: move to UpdateSpline()?
 
-	SplineField->UpdateSplines();
+	SplineField->UpdateSplines(deltaTime);
 
 	if (IsShowSplines)
 	{
 		_particleTimeCounter += deltaTime;
 		_updateSplineParticles(deltaTime);
 
-		if (_particleTimeCounter > SplineParticlesSpawnDelay)
-		{
-			_particleTimeCounter = 0;
-			AddParticlesToStartPoint();
-		}
-		else if (_particleTimeCounter < 0)		// Проверка на то, что время откатили назад.
-		{
-			_particleTimeCounter = 0;
-		}
+		//if (_particleTimeCounter > SplineParticlesSpawnDelay)
+		//{
+		//	_particleTimeCounter = 0;
+		//	AddParticlesToStartPoint();
+		//}
+		//else if (_particleTimeCounter < 0)		// Проверка на то, что время откатили назад.
+		//{
+		//	_particleTimeCounter = 0;
+		//}
 	}
 }
 
@@ -175,7 +148,7 @@ void AFieldActor::SetEpsilon(float epsilon)
 	Calculator->Epsilon = epsilon;
 
 	SplineField->SplineMaterial->SetScalarParameterValue(TEXT("epsilon"), epsilon);
-	SplineField->UpdateSplines();
+	SplineField->UpdateSplines(0);
 
 	VectorField->VectorMaterial->SetScalarParameterValue(TEXT("epsilon"), epsilon);
 }
@@ -204,16 +177,11 @@ void AFieldActor::SetSizeMultipiler(float sizeMultipiler)
 //	//VectorInstancedMesh->MarkRenderStateDirty();	// for debug
 //}
 
-void AFieldActor::SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDelay)
-{
-	SplineParticlesSpawnDelay = newSplineParticlesSpawnDelay;
-}
-
 void AFieldActor::SetLyambda(float lyambda)
 {
 	Calculator->Lyambda = lyambda;
 	SplineField->SplineMaterial->SetScalarParameterValue(TEXT("lyambda"), lyambda);
-	SplineField->UpdateSplines();
+	SplineField->UpdateSplines(0);
 
 	VectorField->VectorMaterial->SetScalarParameterValue(TEXT("lyambda"), lyambda);
 }
@@ -223,7 +191,7 @@ void AFieldActor::SetLowerLimits(FVector newLowerLimits)
 	Calculator->LowerLimits = newLowerLimits;
 	
 	CuboidSurface->UpdateSurface(Calculator->LowerLimits, Calculator->UpperLimits);
-	SplineField->UpdateSplines(true);
+	SplineField->UpdateSplines(0, true);
 
 	VectorField->Revisualize();
 }
@@ -233,7 +201,7 @@ void AFieldActor::SetUpperLimits(FVector newUpperLimits)
 	Calculator->UpperLimits = newUpperLimits;
 
 	CuboidSurface->UpdateSurface(Calculator->LowerLimits, Calculator->UpperLimits);
-	SplineField->UpdateSplines(true);
+	SplineField->UpdateSplines(0, true);
 
 	VectorField->Revisualize();
 }
@@ -284,7 +252,7 @@ void AFieldActor::SetCalculator(UCalculator* calculator)
 	FString name;
 	Calculator->GetClass()->GetName(name);
 	SplineField->SelectMaterial(name);
-	SplineField->UpdateSplines(true);
+	SplineField->UpdateSplines(0, true);
 
 	VectorField->Revisualize();
 }
@@ -302,11 +270,6 @@ float AFieldActor::GetSizeMultipiler()
 bool AFieldActor::GetIsShowVectors()
 {
 	return IsShowVectors;
-}
-
-float AFieldActor::GetSplineParticlesSpawnDelay()
-{
-	return SplineParticlesSpawnDelay;
 }
 
 float AFieldActor::GetLyambda()
@@ -420,7 +383,7 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 	//}
 	if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, EditorFlipFlopFieldsUpdate))
 	{
-		SplineField->UpdateSplines();
+		SplineField->UpdateSplines(0);
 		VectorField->Revisualize();
 	}
 	//else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, IsShowVectors))

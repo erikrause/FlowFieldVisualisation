@@ -3,20 +3,20 @@ PRAGMA_DISABLE_OPTIMIZATION
 
 #include "Spline.h"
 
-USpline* USpline::Construct(FVector splineStartPoint, UCalculator const* const* calculator)
+USpline* USpline::Construct(FVector startPoint, UCalculator const* const* calculator)
 {
     USpline* spline = NewObject<USpline>();
-    spline->Init(splineStartPoint, calculator);
+    spline->Init(startPoint, calculator);
     return spline;
 }
 
-void USpline::Init(FVector splineStartPoint, UCalculator const* const* calculator)
+void USpline::Init(FVector startPoint, UCalculator const* const* calculator)
 {
-    SplineStartPoint = splineStartPoint;
+    StartPoint = startPoint;
 	Calculator = calculator;
 }
 
-void USpline::UpdateSpline(int splinePointsLimit, float splineCalcStep)
+void USpline::UpdateSpline(int curvePointsLimit, float curveStep)
 {
 	int i;
 	//if (!isContinue)
@@ -42,37 +42,57 @@ void USpline::UpdateSpline(int splinePointsLimit, float splineCalcStep)
 
 	FVector vel = (*Calculator)->Calc_vel(splinePoint);
 	bool isCorrectNormalized = vel.Normalize();
-	FVector newSplinePoint = (splinePoint + vel * splineCalcStep) - offset;
+	FVector newSplinePoint = (splinePoint + vel * curveStep) - offset;
 	//
 
 	while (newSplinePoint.X + offset.X >= min.X && newSplinePoint.Y + offset.Y >= min.Y && newSplinePoint.Z + offset.Z >= min.Z &&
-		newSplinePoint.X + offset.X <= max.X && newSplinePoint.Y + offset.Y <= max.Y && newSplinePoint.Z + offset.Z <= max.Z &&
-		i < splinePointsLimit &&
-		newSplinePoint != (GetLocationAtSplinePoint(i - 1, ESplineCoordinateSpace::Local)) &&	// ѕроверка на зацикливание кривой в пределах трех точек.
-		isCorrectNormalized)	// ѕроверка на vel == 0 (например, когда t -> inf).
+	newSplinePoint.X + offset.X <= max.X && newSplinePoint.Y + offset.Y <= max.Y && newSplinePoint.Z + offset.Z <= max.Z &&
+	i < curvePointsLimit &&
+	newSplinePoint != (GetLocationAtSplinePoint(i - 1, ESplineCoordinateSpace::Local)) &&	// ѕроверка на зацикливание кривой в пределах трех точек.
+	isCorrectNormalized)	// ѕроверка на vel == 0 (например, когда t -> inf).
 	{
 		AddSplineLocalPoint(newSplinePoint);
 		//splineComponent->SetSplinePointType(i + 1, ESplinePointType::Linear, true);		// TODO: check update arg.
 
-		//SplineInstancedMesh->UpdateInstanceTransform()
 		//FScopeLock(FCriticalSection())
-
-		/*splineMeshComponent->SetStaticMesh(SplineMesh);
-		splineMeshComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-		splineMeshComponent->SetRelativeLocation(newSplinePoint * SizeMultipiler);
-
-		// Define the spline mesh points:
-		FVector StartPoint = splineComponent->GetLocationAtSplinePoint(i - 1, ESplineCoordinateSpace::Type::Local);
-		FVector StartTangent = splineComponent->GetTangentAtSplinePoint(i - 1, ESplineCoordinateSpace::Type::Local);
-		FVector EndPoint = splineComponent->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Type::Local);
-		FVector EndTangent = splineComponent->GetTangentAtSplinePoint(i, ESplineCoordinateSpace::Type::Local);
-		splineMeshComponent->SetStartAndEnd(StartPoint, StartTangent, EndPoint, EndTangent, true);
-		*/
 
 		// Next loop prepare:
 		vel = (*Calculator)->Calc_vel(newSplinePoint + offset);
 		isCorrectNormalized = vel.Normalize();
-		newSplinePoint = (newSplinePoint + vel * splineCalcStep);
+		newSplinePoint = (newSplinePoint + vel * curveStep);
 		i++;
+	}
+}
+
+void USpline::SpawnParticle(float distance)
+{
+	//FVector location = GetLocationAtDistanceAlongSpline(0, ESplineCoordinateSpace::Local);
+	Particles.Add(new SplineParticle(distance));
+}
+
+// ќбновл€ет данные частиц на сплайне и удал€ет частицы, вышедшие за пределы сплайна.
+void USpline::UpdateParticles(float deltaTime)
+{
+	TArray<SplineParticle*> outsideParticles;		// „астицы, вышедшие за границы сплайна.
+
+	// TODO: распараллелить цикл.
+	for (SplineParticle* particle : Particles)
+	{
+		FVector offset = GetRelativeLocation();
+		FVector particlePosition = GetLocationAtDistanceAlongSpline(particle->Distance, ESplineCoordinateSpace::Local) + offset;
+		FVector particleVelocity = (*Calculator)->Calc_vel(particlePosition);
+		particle->Distance += particleVelocity.Size() * deltaTime;	// TODO: проверить значение, возвращаеме Size().
+
+		if ((particle->Distance > GetSplineLength()) || (particle->Distance < 0))
+		{
+			outsideParticles.Add(particle);
+		}
+	}
+
+	// Remove outside particles:
+	for (SplineParticle* particle : outsideParticles)
+	{
+		//Particles.FilterByPredicate([](return particle.De))
+		Particles.Remove(particle);
 	}
 }
