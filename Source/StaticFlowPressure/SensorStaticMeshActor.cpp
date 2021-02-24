@@ -53,7 +53,7 @@ AFieldActor::AFieldActor()
 	SplineField = CreateDefaultSubobject<USplineField>(TEXT("SplineField"));
 	TArray<ISplinesStartArea*> splinesStartAreas;
 	splinesStartAreas.Add(CuboidSurface);
-	SplineField->Init(&Calculator, splinesStartAreas);
+	SplineField->Init(&Calculator, splinesStartAreas, &SizeMultipiler);
 	SplineField->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 
 #pragma endregion
@@ -112,10 +112,10 @@ void AFieldActor::OnConstruction(const FTransform& transform)
 
 #pragma region Setters for uproperties
 
-void AFieldActor::SetSimulationTime(float time)
+void AFieldActor::SetSimulationTime(float newSimulationTime)
 {
-	float deltaTime = time - SimulationTime;
-	SimulationTime = time;	// TODO: move to Calculator.
+	float deltaTime = newSimulationTime - SimulationTime;
+	SimulationTime = newSimulationTime;	// TODO: move to Calculator.
 
 	Calculator->Time = SimulationTime;
 
@@ -125,22 +125,6 @@ void AFieldActor::SetSimulationTime(float time)
 	SplineField->SplineMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);		// TODO: move to UpdateSpline()?
 
 	SplineField->UpdateSplines(deltaTime);
-
-	if (IsShowSplines)
-	{
-		_particleTimeCounter += deltaTime;
-		_updateSplineParticles(deltaTime);
-
-		//if (_particleTimeCounter > SplineParticlesSpawnDelay)
-		//{
-		//	_particleTimeCounter = 0;
-		//	AddParticlesToStartPoint();
-		//}
-		//else if (_particleTimeCounter < 0)		// ѕроверка на то, что врем€ откатили назад.
-		//{
-		//	_particleTimeCounter = 0;
-		//}
-	}
 }
 
 void AFieldActor::SetEpsilon(float epsilon)
@@ -219,22 +203,6 @@ void AFieldActor::SetIsShowSplines(bool isShowSplines)
 		//SplineInstancedMesh->ClearInstances();
 	}
 }
-
-void AFieldActor::SetParticleSize(float particleSize)
-{
-	ParticleSize = particleSize;
-
-	//for (int i = 0; i < ParticleInstancedMesh->GetInstanceCount(); i++)
-	//{
-	//	FTransform transform = FTransform();
-	//	ParticleInstancedMesh->GetInstanceTransform(i, transform);
-	//	transform.SetScale3D(FVector(0.01, 0.01, 0.01) * ParticleSize / SizeMultipiler);
-	//}
-	//ParticleInstancedMesh->MarkRenderStateDirty();
-
-	AddParticlesToStartPoint();		//TODO: проверить, нужна ли эта строка?
-}
-
 #pragma endregion
 
 #pragma region Getters for uproperties
@@ -291,80 +259,8 @@ bool AFieldActor::GetIsShowSplines()
 {
 	return IsShowSplines;
 }
-
-float AFieldActor::GetParticleSize()
-{
-	return ParticleSize;
-}
 #pragma endregion
 
-void AFieldActor::_updateSplineParticles(float deltaTime)
-{
-	////int instancesNum = ParticleInstancedMesh->GetInstanceCount();
-
-	//FVector min = Calculator->LowerLimits;
-	//FVector max = Calculator->UpperLimits;
-
-	//ParallelFor(Splines.Num(), [this, deltaTime, min, max](int32 i)
-	//{
-	//	USpline* spline = Splines[i];
-
-	//	TArray<int> particlesToDelete = TArray<int>();
-
-	//	for (int particleId : spline->ParticleIds)
-	//	{
-	//		FTransform particleTransform = FTransform();
-	//		ParticleInstancedMesh->GetInstanceTransform(particleId, particleTransform);
-	//		FVector oldParticleLocation = particleTransform.GetLocation();
-	//		// TODO: изменить по дистации на сплайне. ¬ременное решение:
-	//		FVector particleVelocity = Calculator->Calc_vel(SimulationTime, oldParticleLocation);
-	//		FVector newParticleLocation = oldParticleLocation + particleVelocity * deltaTime;
-
-	//		// ѕроверка на то, что частица в границах куба:
-	//		if (newParticleLocation.X >= min.X && newParticleLocation.Y >= min.Y && newParticleLocation.Z >= min.Z &&
-	//			newParticleLocation.X <= max.X && newParticleLocation.Y <= max.Y && newParticleLocation.Z <= max.Z)		// TODO: добавить проверку на particleVelocity.IsNearZero(); либо лимит на количество частиц.
-	//		{
-	//			if (particleId + 1 < spline->ParticleIds.Num())
-	//			{
-	//				FTransform nextParticleTransform = FTransform();
-	//				ParticleInstancedMesh->GetInstanceTransform(particleId, nextParticleTransform);
-	//				
-	//				if (nextParticleTransform.GetLocation() == newParticleLocation)
-	//				{
-	//					ParticleInstancedMesh->RemoveInstance(particleId + 1);		// ≈сли эта частица догнала следующую, то удалить следующую.
-	//				}
-	//			}
-	//			particleTransform.SetLocation(newParticleLocation);
-	//			//_mutex.Lock();
-	//			ParticleInstancedMesh->UpdateInstanceTransform(particleId, particleTransform);
-	//			//_mutex.Unlock();
-	//		}
-	//		else
-	//		{
-	//			//_mutex.Lock();
-	//			ParticleInstancedMesh->RemoveInstance(particleId);
-	//			//_mutex.Unlock();
-	//			particlesToDelete.Add(particleId);
-	//		}
-	//		for (int particleIndex : particlesToDelete)
-	//		{
-	//			//spline->ParticleIds.Remove(particleIndex); TODO: debug.
-	//		}
-	//	}
-
-	//}, EParallelForFlags::ForceSingleThread);		// TODO: сделать многопоток (проблемы с Remove из TArray).
-	//ParticleInstancedMesh->MarkRenderStateDirty();		// ќтрендерить изменени€.
-}
-
-void AFieldActor::AddParticlesToStartPoint()
-{
-	//// Init spline particles:
-	//for (USpline* spline : Splines)
-	//{
-	//	int id = ParticleInstancedMesh->AddInstance(FTransform(FRotator(0, 0, 0), spline->GetRelativeLocation() / SizeMultipiler, FVector(0.01, 0.01, 0.01) * ParticleSize / SizeMultipiler));
-	//	spline->ParticleIds.Add(id);
-	//}
-}
 
 #if WITH_EDITOR
 void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сделать сеттеры дл€ свойств.
@@ -413,10 +309,6 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SimulationTime))
 	{
 		SetSimulationTime(SimulationTime);
-	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, ParticleSize))
-	{
-		SetParticleSize(ParticleSize);
 	}
 	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, Calculator))
 	{
@@ -531,6 +423,8 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 void AFieldActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SplineField->FillSplineWithParticles(1);
 }
 
 void AFieldActor::Tick(float deltaSeconds)

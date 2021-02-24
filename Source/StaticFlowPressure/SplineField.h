@@ -18,14 +18,16 @@ public:
 	USplineField();
 
 	//static USplineField* Construct(UCalculator const* const* calculator);
-	void Init(UCalculator const* const* calculator, TArray<ISplinesStartArea*> splinesStartAreas);
+	void Init(UCalculator const* const* calculator, TArray<ISplinesStartArea*> splinesStartAreas, float* sizeMultipiler);
 
 	UCalculator const* const* Calculator;	//		?move to USpline class.
 
 	TArray<ISplinesStartArea*> SplinesStartAreas;
 
 	void UpdateSplines(float deltaTime, bool isUpdateStartPositions = false);
-	void SpawnParticlesOnSplines(float distance);		// Создает частицы в сплайне с определенным расстоянием от старта.
+	void SpawnParticlesAtSplinesStart();
+	void SpawnParticlesAtSplinesEnd();
+	void FillSplineWithParticles(float distanceBetweenParticles);
 
 	UPROPERTY()
 		TArray<USpline*> Splines;
@@ -71,8 +73,10 @@ public:
 		void SetSplineThickness(float newSplineThickness);
 	UFUNCTION(BlueprintCallable, Category = "Visualisation")
 		void SetResolution(FIntVector newResolution);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+	UFUNCTION(BlueprintCallable, Category = "Visualisation")
 		void SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDelay);
+	UFUNCTION(BlueprintCallable, Category = "Visualisation")
+		void SetParticleSize(float newParticleSize);
 
 #pragma endregion
 
@@ -87,8 +91,10 @@ public:
 		float GetSplineThickness();
 	UFUNCTION(BlueprintCallable, Category = "Visualisation")
 		FIntVector GetResolution();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
+	UFUNCTION(BlueprintCallable, Category = "Visualisation")
 		float GetSplineParticlesSpawnDelay();
+	UFUNCTION(BlueprintCallable, Category = "Visualisation")
+		float GetParticleSize();
 
 #pragma endregion
 
@@ -100,4 +106,6 @@ protected:
 	void _addSplineCalculatorAsset(FString name);
 
 	float _particleSpawnTimeCounter;
+
+	float* _sizeMultipiler;
 };

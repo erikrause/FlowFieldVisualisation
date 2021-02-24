@@ -3,17 +3,18 @@ PRAGMA_DISABLE_OPTIMIZATION
 
 #include "Spline.h"
 
-USpline* USpline::Construct(FVector startPoint, UCalculator const* const* calculator)
+USpline* USpline::Construct(FVector startPoint, UCalculator const* const* calculator, float* sizeMultipiler)
 {
     USpline* spline = NewObject<USpline>();
-    spline->Init(startPoint, calculator);
+    spline->Init(startPoint, calculator, sizeMultipiler);
     return spline;
 }
 
-void USpline::Init(FVector startPoint, UCalculator const* const* calculator)
+void USpline::Init(FVector startPoint, UCalculator const* const* calculator, float* sizeMultipiler)
 {
     StartPoint = startPoint;
 	Calculator = calculator;
+	_sizeMultipiler = sizeMultipiler;
 }
 
 void USpline::UpdateSpline(int curvePointsLimit, float curveStep)
@@ -95,4 +96,9 @@ void USpline::UpdateParticles(float deltaTime)
 		//Particles.FilterByPredicate([](return particle.De))
 		Particles.Remove(particle);
 	}
+}
+
+float USpline::GetSplineLength() const
+{
+	return Super::GetSplineLength() / *_sizeMultipiler;
 }

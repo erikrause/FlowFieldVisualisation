@@ -81,8 +81,6 @@ public:
 
 	void OnConstruction(const FTransform& transform) override;
 
-	void AddParticlesToStartPoint();
-
 	FVector CubeCenter;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
 		UCuboidSurface* CuboidSurface;
@@ -109,8 +107,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetIsShowSplines(bool newIsShowSplines);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetParticleSize(float newParticleSize);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetCalculator(UCalculator* newCalculator);
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		void SetLyambda(float newLyambda);
@@ -131,8 +127,6 @@ public:
 		bool GetIsShowVectors();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		bool GetIsShowSplines();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		float GetParticleSize();
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		float GetLyambda();
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
@@ -153,14 +147,4 @@ protected:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent & propertyChangedEvent) override; 
 #endif
 
-	//void _createSplinePoints(USplineComponent* splineComponent, bool isContinue = false);
-
-	/// <summary>
-	/// Обновляет позиции частиц на сплайнах.
-	/// </summary>
-	void _updateSplineParticles(float deltaTime);
-
-	float _particleTimeCounter = 0;
-
-	//void _updateMaterialParameters(UMaterialInstanceDynamic* vectorMaterial);
 };

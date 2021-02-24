@@ -18,8 +18,8 @@ class STATICFLOWPRESSURE_API USpline : public USplineComponent
 	
 public:
 
-	static USpline* Construct(FVector startPoint, UCalculator const* const* calculator);
-	void Init(FVector startPoint, UCalculator const* const* calculator);
+	static USpline* Construct(FVector startPoint, UCalculator const* const* calculator, float* sizeMultipiler);
+	void Init(FVector startPoint, UCalculator const* const* calculator, float* sizeMultipiler);
 
 	FVector StartPoint;
 	UCalculator const* const* Calculator;
@@ -33,4 +33,11 @@ public:
 	/// </summary>
 	//TArray<int> ParticleIds;
 	TArray<SplineParticle*> Particles;
+
+	//UFUNCTION(BlueprintCallable, Category = Spline)
+		float GetSplineLength() const;
+
+protected:
+
+	float* _sizeMultipiler;
 };

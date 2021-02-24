@@ -53,9 +53,10 @@ USplineField::USplineField()
 #pragma endregion
 }
 
-void USplineField::Init(UCalculator const* const* calculator, TArray<ISplinesStartArea*> splinesStartAreas)
+void USplineField::Init(UCalculator const* const* calculator, TArray<ISplinesStartArea*> splinesStartAreas, float* sizeMultipiler)
 {
 	Calculator = calculator;
+	_sizeMultipiler = sizeMultipiler;
 	SplinesStartAreas = splinesStartAreas;
 
 	FString materialName;
@@ -84,7 +85,7 @@ void USplineField::UpdateSplines(float deltaTime, bool isUpdateStartPositions)
 			TArray<FVector> locations = area->GetSplinesStartLocations(Resolution);
 			for (FVector location : locations)
 			{
-				USpline* spline = USpline::Construct(location, Calculator);
+				USpline* spline = USpline::Construct(location, Calculator, _sizeMultipiler);
 				spline->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
 				spline->ClearSplinePoints();		// Удаляет дефолтные точки.
 				//splineComponent->bInputSplinePointsToConstructionScript = true;
@@ -102,14 +103,17 @@ void USplineField::UpdateSplines(float deltaTime, bool isUpdateStartPositions)
 
 	_particleSpawnTimeCounter += deltaTime;
 
-	if (_particleSpawnTimeCounter > SplineParticlesSpawnDelay)
+	// Обработка изменения времени (play и перемотка вперед).
+	while (_particleSpawnTimeCounter > SplineParticlesSpawnDelay)
 	{
-		_particleSpawnTimeCounter = 0;
-		SpawnParticlesOnSplines(0);
+		_particleSpawnTimeCounter -= SplineParticlesSpawnDelay;
+		SpawnParticlesAtSplinesStart();
 	}
-	else if (_particleSpawnTimeCounter < 0)	// TODO: Обработать перемотку назад.
+	// Обработка перемотки назад.
+	while ((_particleSpawnTimeCounter < 0) && ( abs(_particleSpawnTimeCounter) > SplineParticlesSpawnDelay))
 	{
-		_particleSpawnTimeCounter = 0;
+		_particleSpawnTimeCounter += SplineParticlesSpawnDelay;
+		SpawnParticlesAtSplinesEnd();
 	}
 
 #pragma endregion
@@ -157,7 +161,7 @@ void USplineField::UpdateSplines(float deltaTime, bool isUpdateStartPositions)
 		for (SplineParticle* particle : spline->Particles)
 		{
 			FVector scale = FVector(0.01, 0.01, 0.01) * ParticleSize;
-			FVector location = spline->GetLocationAtDistanceAlongSpline(particle->Distance, ESplineCoordinateSpace::Local) + offset;
+			FVector location = spline->GetLocationAtDistanceAlongSpline(particle->Distance * *_sizeMultipiler, ESplineCoordinateSpace::Local) + offset;
 			FRotator rotation = FRotator(0, 0, 0);
 
 			ParticleInstancedMesh->AddInstance(FTransform(rotation, location, scale));
@@ -167,11 +171,35 @@ void USplineField::UpdateSplines(float deltaTime, bool isUpdateStartPositions)
 
 }
 
-void USplineField::SpawnParticlesOnSplines(float distance)
+void USplineField::SpawnParticlesAtSplinesStart()
 {
 	for (USpline* spline : Splines)
 	{
-		spline->SpawnParticle(distance);
+		spline->SpawnParticle(0);
+	}
+}
+
+void USplineField::SpawnParticlesAtSplinesEnd()
+{
+	for (USpline* spline : Splines)
+	{
+		spline->SpawnParticle(spline->GetSplineLength());
+	}
+}
+
+void USplineField::FillSplineWithParticles(float distanceBetweenParticles)
+{
+	for (USpline* spline : Splines)
+	{
+		float distance = 0;
+		float splineLength = spline->GetSplineLength();
+
+		while (distance < splineLength)
+		{
+			spline->SpawnParticle(distance);
+
+			distance += distanceBetweenParticles;
+		}
 	}
 }
 
@@ -222,6 +250,19 @@ void USplineField::SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDel
 	SplineParticlesSpawnDelay = newSplineParticlesSpawnDelay;
 }
 
+void USplineField::SetParticleSize(float newParticleSize)
+{
+	ParticleSize = newParticleSize;
+
+	for (int i = 0; i < ParticleInstancedMesh->GetInstanceCount(); i++)
+	{
+		FTransform transform = FTransform();
+		ParticleInstancedMesh->GetInstanceTransform(i, transform);
+		transform.SetScale3D(FVector(0.01, 0.01, 0.01) * ParticleSize);
+	}
+	ParticleInstancedMesh->MarkRenderStateDirty();
+}
+
 int USplineField::GetSplinePointsLimit()
 {
 	return SplinePointsLimit;
@@ -245,6 +286,11 @@ FIntVector USplineField::GetResolution()
 float USplineField::GetSplineParticlesSpawnDelay()
 {
 	return SplineParticlesSpawnDelay;
+}
+
+float USplineField::GetParticleSize()
+{
+	return ParticleSize;
 }
 
 //TODO: move to UCalculator.
