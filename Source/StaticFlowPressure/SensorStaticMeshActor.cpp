@@ -73,11 +73,11 @@ void AFieldActor::OnConstruction(const FTransform& transform)
 	SetSizeMultipiler(GetActorScale3D().X);
 	CubeCenter = (Calculator->UpperLimits + Calculator->LowerLimits) / 2;
 #if WITH_EDITOR
-	SetPivotOffset(CubeCenter * GetSizeMultipiler());
+	SetPivotOffset(CubeCenter);
 #endif
 
-	UCuboidFace* cuboidFace = CuboidSurface->GetFaceBy(FaceAxis::XY, FacePosition::Front);
-	cuboidFace->IsActivated = true;
+	/*UCuboidFace* cuboidFace = CuboidSurface->GetFaceBy(FaceAxis::XY, FacePosition::Front);
+	cuboidFace->IsActivated = true;*/
 	SplineField->UpdateSplines(0, true);
 	VectorField->Revisualize();
 }

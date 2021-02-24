@@ -103,6 +103,8 @@ void USplineField::UpdateSplines(float deltaTime, bool isUpdateStartPositions)
 
 	_particleSpawnTimeCounter += deltaTime;
 
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::SanitizeFloat(_particleSpawnTimeCounter));
+
 	// ќбработка изменени€ времени (play и перемотка вперед).
 	while (_particleSpawnTimeCounter > SplineParticlesSpawnDelay)
 	{
