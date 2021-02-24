@@ -218,6 +218,10 @@ void USplineField::SelectMaterial(FString name)
 
 	SplineMaterial = UMaterialInstanceDynamic::Create(SpllineCalculatorsAssets[name], this);
 	SplineInstancedMesh->SetMaterial(0, SplineMaterial);
+
+	SplineMaterial->SetScalarParameterValue(TEXT("time"), 0);
+	SplineMaterial->SetScalarParameterValue(TEXT("epsilon"), (*Calculator)->Epsilon);
+	SplineMaterial->SetScalarParameterValue(TEXT("scale"), *_sizeMultipiler);
 }
 
 void USplineField::SetSplinePointsLimit(int splinePointsLimit)

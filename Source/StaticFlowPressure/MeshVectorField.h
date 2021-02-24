@@ -16,7 +16,7 @@ class STATICFLOWPRESSURE_API UMeshVectorField : public USceneComponent
 public:	
 	UMeshVectorField();
 
-	void Init(UCalculator const* const* calculator);
+	void Init(UCalculator const* const* calculator, float* sizeMultipiler);
 
 	UCalculator const* const* Calculator;
 
@@ -56,4 +56,5 @@ protected:
 
 	TArray<FVector> _calculateVectorLocations(FIntVector resolution, bool isApplyBias = true) const;
 
+	float* _sizeMultipiler;
 };

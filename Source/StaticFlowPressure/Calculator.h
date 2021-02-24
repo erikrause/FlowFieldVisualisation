@@ -48,8 +48,6 @@ public:
 	virtual FVector Calc_vel(FVector position) const;// = 0;// PURE_VIRTUAL(UCalculator::calc_vel);
 	virtual float Calc_pres(FVector position) const;// = 0; // PURE_VIRTUAL(UCalculator::calc_pres);
 	//virtual float Calc_pres_by_vel(float time, FVector velocity);
-	//TArray<FVector> CalculateLocations(FIntVector resolution, bool isApplyBias = true) const;
-	//TArray<FVector> CalculateFlatLocations(float firstAxisRes, float secondAxisRes, FaceAxis plane, bool isOppositePlane, bool isApplyBias = true);
 	FVector GetDistanceBetweenSensors(FIntVector resolution) const;		// TODO: переместить в Vector field.
 
 	FVector LowerLimits = FVector(1, 1, 1);		// A

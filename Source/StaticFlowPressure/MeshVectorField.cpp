@@ -29,18 +29,19 @@ UMeshVectorField::UMeshVectorField()
 	VectorInstancedMesh->SetRenderCustomDepth(true);
 	//_createField();
 
-	// Materials init:
-	//VectorMaterial->SetScalarParameterValue(TEXT("time"), SimulationTime);
-	//VectorMaterial->SetScalarParameterValue(TEXT("epsilon"), Epsilon);
-	//VectorMaterial->SetScalarParameterValue(TEXT("scale"), SizeMultipiler);
-
 #pragma endregion
 
 }
 
-void UMeshVectorField::Init(UCalculator const* const* calculator)
+void UMeshVectorField::Init(UCalculator const* const* calculator, float* sizeMultipiler)
 {
 	Calculator = calculator;
+	_sizeMultipiler = sizeMultipiler;
+
+	// Materials init:
+	VectorMaterial->SetScalarParameterValue(TEXT("time"), 0);
+	VectorMaterial->SetScalarParameterValue(TEXT("epsilon"), (*Calculator)->Epsilon);
+	VectorMaterial->SetScalarParameterValue(TEXT("scale"), *_sizeMultipiler);
 }
 
 void UMeshVectorField::Revisualize()
