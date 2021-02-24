@@ -25,9 +25,14 @@ public:
 	TArray<ISplinesStartArea*> SplinesStartAreas;
 
 	void UpdateSplines(float deltaTime, bool isUpdateStartPositions = false);
-	void SpawnParticlesAtSplinesStart();
-	void SpawnParticlesAtSplinesEnd();
-	void FillSplineWithParticles(float distanceBetweenParticles);
+	UFUNCTION(BlueprintCallable)
+		void SpawnParticlesAtSplinesStart();
+	UFUNCTION(BlueprintCallable)
+		void SpawnParticlesAtSplinesEnd();
+	UFUNCTION(BlueprintCallable)
+		void FillSplineWithParticles(float distanceBetweenParticles);
+	UFUNCTION(BlueprintCallable)
+		void RemoveParticles();
 
 	UPROPERTY()
 		TArray<USpline*> Splines;

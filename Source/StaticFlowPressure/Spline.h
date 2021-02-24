@@ -27,6 +27,7 @@ public:
 	void UpdateSpline(int curvePointsLimit, float curveStep);
 	void SpawnParticle(float distance);
 	void UpdateParticles(float deltaTime);
+	void RemoveParticles();
 
 	/// <summary>
 	/// Частицы, принадлежащие этому сплайну.

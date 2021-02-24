@@ -98,6 +98,11 @@ void USpline::UpdateParticles(float deltaTime)
 	}
 }
 
+void USpline::RemoveParticles()
+{
+	Particles.Empty();
+}
+
 float USpline::GetSplineLength() const
 {
 	return Super::GetSplineLength() / *_sizeMultipiler;

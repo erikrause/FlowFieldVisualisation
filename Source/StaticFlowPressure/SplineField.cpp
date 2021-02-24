@@ -126,7 +126,7 @@ void USplineField::UpdateSplines(float deltaTime, bool isUpdateStartPositions)
 			//_createSplinePoints(Splines[i], isContinue);
 			Splines[i]->UpdateSpline(this->SplinePointsLimit, this->SplineCalcStep);
 			Splines[i]->UpdateParticles(deltaTime);
-		}, EParallelForFlags::ForceSingleThread);
+		}, EParallelForFlags::None);
 
 #pragma endregion
 
@@ -200,6 +200,14 @@ void USplineField::FillSplineWithParticles(float distanceBetweenParticles)
 
 			distance += distanceBetweenParticles;
 		}
+	}
+}
+
+void USplineField::RemoveParticles()
+{
+	for (USpline* spline : Splines)
+	{
+		spline->RemoveParticles();
 	}
 }
 
