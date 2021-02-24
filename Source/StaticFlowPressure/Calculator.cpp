@@ -28,18 +28,17 @@ double* massiv_data;
 
 UCalculator::UCalculator()
 {
-    int prob = 0;
 }
 
 double UCalculator::sigmoid(double x)
 {
     return 1 / (1 + exp(-x));
 }
-FVector UCalculator::Calc_vel(float time, FVector pos)
+FVector UCalculator::Calc_vel(FVector pos) const
 {
     return FVector();
 }
-float UCalculator::Calc_pres(float time, FVector pos)
+float UCalculator::Calc_pres(FVector pos) const
 {
     return 0.0;
 }
@@ -47,100 +46,100 @@ float UCalculator::Calc_pres(float time, FVector pos)
 /// elements of resolution must be > 1.
 /// isApplyBias - применить смещнеие. ≈сли false - то точки будут в диапазоне [0, 1].
 /// 
-TArray<FVector> UCalculator::CalculateLocations(FIntVector resolution, bool isApplyBias)
-{
-    // ѕроверка, если одна из осей <= 1 (костыль, TODO):
-    FVector axisMask = FVector(1, 1, 1);
-    
-    for (int axis = 0; axis < 3; axis++)
-    {
-        if (resolution[axis] <= 1)
-        {
-            resolution[axis] = 2;    // минимальное значение, возможное в цикле.
-            axisMask[axis] = 0;     // ось, котора€ <=, обнулитс€
-        }
-    }
+//TArray<FVector> UCalculator::CalculateLocations(FIntVector resolution, bool isApplyBias) const
+//{
+//    // ѕроверка, если одна из осей <= 1 (костыль, TODO):
+//    FVector axisMask = FVector(1, 1, 1);
+//    
+//    for (int axis = 0; axis < 3; axis++)
+//    {
+//        if (resolution[axis] <= 1)
+//        {
+//            resolution[axis] = 2;    // минимальное значение, возможное в цикле.
+//            axisMask[axis] = 0;     // ось, котора€ <=, обнулитс€
+//        }
+//    }
+//
+//    double tempX, tempY, tempZ;
+//
+//    TArray<FVector> locations = TArray<FVector>();
+//
+//    for (int i = 0; i < resolution.X; i++)
+//    {
+//        tempX = (double)i / (double)(resolution.X - 1);
+//
+//        for (int j = 0; j < resolution.Y; j++)
+//        {
+//            tempY = (double)j / (double)(resolution.Y - 1);
+//
+//            for (int k = 0; k < resolution.Z; k++)
+//            {
+//                tempZ = (double)k / (double)(resolution.Z - 1);
+//
+//                FVector location = FVector(tempX, tempY, tempZ);
+//                location *= axisMask;
+//
+//                if (isApplyBias)
+//                {
+//                    location = (UpperLimits - LowerLimits)* location + LowerLimits;
+//                }
+//
+//                locations.Add(location);
+//            }
+//        }
+//    }
+//
+//    return locations;
+//}
+//
+//TArray<FVector> UCalculator::CalculateFlatLocations(float firstAxisRes, float secondAxisRes, FaceAxis plane, bool isOppositePlane, bool isApplyBias)    // TODO: FIntVector arg.
+//{
+//    TArray<FVector> locations = TArray<FVector>();
+//
+//    double tempX, tempY;
+//
+//    for (int i = 0; i < firstAxisRes; i++)
+//    {
+//        tempX = (double)i / (double)(firstAxisRes - 1);
+//
+//        for (int j = 0; j < secondAxisRes; j++)
+//        {
+//            tempY = (double)j / (double)(secondAxisRes - 1);
+//
+//            FVector location;
+//            if (plane == FaceAxis::XY)
+//            {
+//                location = FVector(tempX, tempY, 0);
+//            }
+//            else if (plane == FaceAxis::XZ)
+//            {
+//                location = FVector(tempX, 0, tempY);
+//            }
+//            else if (plane == FaceAxis::YZ)
+//            {
+//                location = FVector(0, tempX, tempY);
+//            }
+//
+//            if (isApplyBias)
+//            {
+//                if (isOppositePlane) 
+//                {
+//                    location = (LowerLimits - UpperLimits) * location + UpperLimits;
+//                }
+//                else
+//                {
+//                    location = (UpperLimits - LowerLimits) * location + LowerLimits;
+//                }
+//                
+//            }
+//            locations.Add(location);
+//        }
+//    }
+//
+//    return locations;
+//}
 
-    double tempX, tempY, tempZ;
-
-    TArray<FVector> locations = TArray<FVector>();
-
-    for (int i = 0; i < resolution.X; i++)
-    {
-        tempX = (double)i / (double)(resolution.X - 1);
-
-        for (int j = 0; j < resolution.Y; j++)
-        {
-            tempY = (double)j / (double)(resolution.Y - 1);
-
-            for (int k = 0; k < resolution.Z; k++)
-            {
-                tempZ = (double)k / (double)(resolution.Z - 1);
-
-                FVector location = FVector(tempX, tempY, tempZ);
-                location *= axisMask;
-
-                if (isApplyBias)
-                {
-                    location = (UpperLimits - LowerLimits)* location + LowerLimits;
-                }
-
-                locations.Add(location);
-            }
-        }
-    }
-
-    return locations;
-}
-
-TArray<FVector> UCalculator::CalculateFlatLocations(float firstAxisRes, float secondAxisRes, FaceAxis plane, bool isOppositePlane, bool isApplyBias)    // TODO: FIntVector arg.
-{
-    TArray<FVector> locations = TArray<FVector>();
-
-    double tempX, tempY;
-
-    for (int i = 0; i < firstAxisRes; i++)
-    {
-        tempX = (double)i / (double)(firstAxisRes - 1);
-
-        for (int j = 0; j < secondAxisRes; j++)
-        {
-            tempY = (double)j / (double)(secondAxisRes - 1);
-
-            FVector location;
-            if (plane == FaceAxis::XY)
-            {
-                location = FVector(tempX, tempY, 0);
-            }
-            else if (plane == FaceAxis::XZ)
-            {
-                location = FVector(tempX, 0, tempY);
-            }
-            else if (plane == FaceAxis::YZ)
-            {
-                location = FVector(0, tempX, tempY);
-            }
-
-            if (isApplyBias)
-            {
-                if (isOppositePlane) 
-                {
-                    location = (LowerLimits - UpperLimits) * location + UpperLimits;
-                }
-                else
-                {
-                    location = (UpperLimits - LowerLimits) * location + LowerLimits;
-                }
-                
-            }
-            locations.Add(location);
-        }
-    }
-
-    return locations;
-}
-
-FVector UCalculator::GetDistanceBetweenSensors(FIntVector resolution)
+FVector UCalculator::GetDistanceBetweenSensors(FIntVector resolution) const
 {
     /*int num_p_along_x = scale;
     return ((B - A) * (double)2 / (double)(num_p_along_x - 1) + A) -

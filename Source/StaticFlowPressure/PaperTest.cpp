@@ -8,11 +8,11 @@ UPaperTest::UPaperTest()
     int prob = 0;
 }
 
-FVector UPaperTest::Calc_vel(float time, FVector pos)
+FVector UPaperTest::Calc_vel(FVector pos) const
 {
     FVector vector = FVector();
 
-    float ex = exp(-Epsilon * time);
+    float ex = exp(-Epsilon * Time);
     vector.X = ex * (sin(pos.Y) - cos(pos.Z));
     vector.Y = ex * (sin(pos.Z) - cos(pos.X));
     vector.Z = ex * (sin(pos.X) - cos(pos.Y));
@@ -20,7 +20,8 @@ FVector UPaperTest::Calc_vel(float time, FVector pos)
     return vector;
 }
 
-float UPaperTest::Calc_pres(float time, FVector pos)
+float UPaperTest::Calc_pres(FVector pos) const
 {
-    return -FVector::DotProduct(Calc_vel(time, pos), Calc_vel(time, pos)) / 2;
+    FVector vel = Calc_vel(pos);
+    return -FVector::DotProduct(vel, vel) / 2;
 }

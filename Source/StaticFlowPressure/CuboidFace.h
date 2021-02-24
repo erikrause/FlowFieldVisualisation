@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CuboidFace.generated.h"
 
 UENUM()
 enum class FaceAxis : uint8
@@ -13,7 +14,7 @@ enum class FaceAxis : uint8
 };
 
 UENUM()
-enum FacePosition
+enum class FacePosition : uint8
 {
 	Front,
 	Back
@@ -22,13 +23,18 @@ enum FacePosition
 /**
  * Грань куба.
  */
-class STATICFLOWPRESSURE_API CuboidFace
+UCLASS()
+class STATICFLOWPRESSURE_API UCuboidFace : public UStaticMeshComponent	//USplinesStartPlane
 {
-
+	GENERATED_BODY()
 public:
 
-	CuboidFace(FVector cuboidStartPoint, FVector cuboidEndPoint, FaceAxis axis, FacePosition facePosition);
-	~CuboidFace();
+	UCuboidFace();
+
+	//Parametrized constructor as: https://answers.unrealengine.com/questions/156055/passing-arguments-to-constructors-in-ue4.html
+	//static UCuboidFace* Construct(FVector cuboidStartPoint, FVector cuboidEndPoint, FaceAxis axis, FacePosition facePosition);
+
+	void Init(FVector cuboidStartPoint, FVector cuboidEndPoint, FaceAxis axis, FacePosition facePosition);
 
 	FaceAxis Axis;
 	FacePosition Position;
@@ -36,7 +42,11 @@ public:
 	FVector EndPoint;
 	FVector Bias;
 
-	TArray<FVector> GetFacePointsGrid(float firstAxisRes, float secondAxisRes);
-	FVector Get2DMask();
-	FVector Get2DMaskNegative();
+	// if IsActive == true, to GetPointsGrid возвращает локации для сплайнов.
+	TArray<FVector> GetPointsGrid(int firstAxisRes, int secondAxisRes, bool ischeckForActivated = true);
+	FVector GetAxisMask();
+	FVector GetNormalVector();
+
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+		bool IsActivated = false;		// if IsActive == true, to GetPointsGrid возвращает локации для сплайнов.
 };

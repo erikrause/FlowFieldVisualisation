@@ -16,7 +16,7 @@ class STATICFLOWPRESSURE_API UTest2 : public UCalculator
 public:
 	UTest2();
 
-	virtual FVector Calc_vel(float time, FVector position) override;
-	virtual float Calc_pres(float time, FVector position) override;
+	virtual FVector Calc_vel(FVector position) const override;
+	virtual float Calc_pres(FVector position) const override;
 	//virtual float Calc_pres_by_vel(float time, FVector velocity) override;
 };

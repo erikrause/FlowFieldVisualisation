@@ -12,25 +12,28 @@
 using namespace std::chrono;
 //#include "Engine/StaticMeshActor.h"
 #include <StaticFlowPressure/CuboidSurface.h>
+#include "Spline.h"
+#include "SplineField.h"
+#include "MeshVectorField.h"
 #include "GameFramework/Actor.h"
 #include "SensorStaticMeshActor.generated.h"
 
 
-struct Spline
-{
-public:
-	Spline(USplineComponent* splineComponent, TArray<int> particleIds)
-	{
-		Component = splineComponent;
-		ParticleIds = particleIds;
-	}
-	USplineComponent* Component;
-
-	/// <summary>
-	/// „астицы, принадлежащие этому сплайну.
-	/// </summary>
-	TArray<int> ParticleIds;
-};
+//struct Spline
+//{
+//public:
+//	Spline(USplineComponent* splineComponent, TArray<int> particleIds)
+//	{
+//		Component = splineComponent;
+//		ParticleIds = particleIds;
+//	}
+//	USplineComponent* Component;
+//
+//	/// <summary>
+//	/// „астицы, принадлежащие этому сплайну.
+//	/// </summary>
+//	TArray<int> ParticleIds;
+//};
 
 /**
  * 
@@ -43,63 +46,33 @@ class STATICFLOWPRESSURE_API AFieldActor : public AActor
 public:
 	AFieldActor();
 
-	// TODO: refactoring - separate VectorField and Splines to components.
-	UMaterialInstanceDynamic* VectorMaterial;
+	UPROPERTY(EditAnywhere, Category = "Vector field visualisation")
+		UMeshVectorField* VectorField;
 
-	UInstancedStaticMeshComponent* VectorInstancedMesh;
+	// TODO: move to separated class.
+	//UInstancedStaticMeshComponent* ParticleInstancedMesh;	// частица, движуща€с€ по сплайну.
 
-	UInstancedStaticMeshComponent* ParticleInstancedMesh;	// частица, движуща€с€ по сплайну.
-
-	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		UStaticMesh* ParticleMesh;
+	//UPROPERTY(EditAnywhere, Category = "Spline calculation")
+	//	UStaticMesh* ParticleMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
 		float ParticleSize = 15;
 
-	UPROPERTY(EditAnywhere, Category = "Vector calculation")
-		UStaticMesh* VectorMesh;
-
-	UMaterialInstanceDynamic* SplineMaterial;
-	UInstancedStaticMeshComponent* SplineInstancedMesh;
-	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		UStaticMesh* SplineMesh;
-
-	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		float SplineThickness = 5;
-
-	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		float SplineCalcStep = 0.1;
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void UpdateSpline(bool isContinue = false);
-
-	TArray<Spline*> Splines = TArray<Spline*>();
-
-
-	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vector field resolution (number of sensors by axis)")
-		FIntVector VectorFieldResolution = FIntVector(30, 30, 30);
-
-	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Spline resolution (number of splines by axis)")
-		FIntVector SplineResolution = FIntVector(20, 20, 1);	// TODO: переделать через плотность.
-	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Splines start axis")
-		FaceAxis SplinesPlane = FaceAxis::XY;
-	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		bool IsOppositeSplinesPlane = false;
-
-	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Vectors size (multipiler)")
-		float VectorMeshRadiusMultipiler = 0.5;
+	//UMaterialInstanceDynamic* SplineMaterial;
+	//UInstancedStaticMeshComponent* SplineInstancedMesh;
+	//UPROPERTY(EditAnywhere, Category = "Spline calculation")
+	//	UStaticMesh* SplineMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Show vector field")
 		bool IsShowVectors = true;
 
 	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Show splines")
 		bool IsShowSplines = true;
-	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		int SplinePointsLimit = 500;
 
-	UPROPERTY(EditAnywhere, Category = "General calculation", DisplayName = "Field size (multipiler)")
-		float SizeMultipiler = 200;
-	UPROPERTY(EditAnywhere, Category = "General calculation")
-		float Epsilon = 1;
+	float SizeMultipiler = 200;
+
+	//UPROPERTY(EditAnywhere, Category = "General calculation")
+	//	float Epsilon = 1;
 	UPROPERTY(EditAnywhere, Category = "General calculation")
 		float SimulationTime = 0;
 
@@ -108,23 +81,21 @@ public:
 
 	void OnConstruction(const FTransform& transform) override;
 
-	void SetSplinesStart(TArray<FVector> locations);
-
-	void AddParticlesToStartPoint();
-
-	//TArray<FSplineCalculatorAsset> SpllineCalculatorsAssets;
-	TMap<FString, UMaterial*> SpllineCalculatorsAssets;
-
 	FVector CubeCenter;
-	CuboidSurface CuboidSurface;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
+		UCuboidSurface* CuboidSurface;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Interaction")
 	TArray<UStaticMeshComponent*> CuboidFacesMeshes;
 
 	UPROPERTY(EditAnywhere, Category = "General calculation")
 		UCalculator* Calculator;//new UTest1::UTest1();
+	UCalculator* _calculator;	//  остыль дл€ сборщика мусора.
 
-	UPROPERTY(EditAnywhere, Category = "Spline calculation")
-		float SplineParticlesSpawnDelay = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spline calsulation")
+		USplineField* SplineField;
+
+	UPROPERTY(EditAnywhere, Category = "Test")
+		bool EditorFlipFlopFieldsUpdate;
 
 #pragma region Setters for uproperties
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
@@ -133,34 +104,12 @@ public:
 		void SetEpsilon(float newEpsilon);
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		void SetSizeMultipiler(float newSizeMultipiler);
-	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
-		void SetVectorFieldResolution(FIntVector newVectorFieldResolution);
-	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
-		void SetVectorMeshRadiusMultipiler(float newVectorMeshRadiusMultipiler);
-	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
-		void SetIsShowVectors(bool newIsShowVectors);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetSplinePointsLimit(int newSplinePointsLimit);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetSplineResolution(FIntVector newSplineResolution);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetSplineCalcStep(float newSplineCalcStep);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetSplineThickness(float newSplineThickness);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetIsShowSplines(bool newIsShowSplines);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetParticleSize(float newParticleSize);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetSplinesPlane(FaceAxis newSplinePlane);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetIsOppositeSplinesPlane(bool newIsOppositePlane);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetCalculator(UCalculator* newCalculator);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetSplineParticlesSpawnDelay(float newSplineParticlesSpawnDelay);
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
-		void SetCalculatorLyambda(float newLyambda);
+		void SetLyambda(float newLyambda);
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		void SetLowerLimits(FVector newLowerLimits);
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
@@ -175,31 +124,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		float GetSizeMultipiler();
 	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
-		FIntVector GetVectorFieldResolution();
-	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
-		float GetVectorMeshRadiusMultipiler();
-	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
 		bool GetIsShowVectors();
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		int GetSplinePointsLimit();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		FIntVector GetSplineResolution();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		float GetSplineCalcStep();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		float GetSplineThickness();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		bool GetIsShowSplines();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		float GetParticleSize();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		FaceAxis GetSplinesPlane();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		bool GetIsOppositeSplinesPlane();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		float GetSplineParticlesSpawnDelay();
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
-		float GetCalculatorLyambda();
+		float GetLyambda();
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		FVector GetLowerLimits();
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
@@ -218,30 +147,4 @@ protected:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent & propertyChangedEvent) override; 
 #endif
 
-	void _reCreateVecotrField();
-
-	milliseconds _time();	// for deubg;
-
-	int _createSensorInstancedMesh(FVector location);
-
-	void _createSplinePoints(USplineComponent* splineComponent, bool isContinue = false);
-
-	void _initVisualisation();
-
-	/// <summary>
-	/// ќбновл€ет позиции частиц на сплайнах.
-	/// </summary>
-	void _updateSplineParticles(float deltaTime);
-
-	float _particleTimeCounter = 0;
-
-	//void _updateMaterialParameters(UMaterialInstanceDynamic* vectorMaterial);
-
-	void _initSplineCalculatorsAssets();
-
-	// Adds tuple to SpllineCalculatorsAssets
-	void _addSplineCalculatorAsset(FString calculatorName);
-
-	void _updateField();
-	void _updateCuboidSurface();
 };
