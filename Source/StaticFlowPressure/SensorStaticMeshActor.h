@@ -63,12 +63,6 @@ public:
 	//UPROPERTY(EditAnywhere, Category = "Spline calculation")
 	//	UStaticMesh* SplineMesh;
 
-	UPROPERTY(EditAnywhere, Category = "Vector calculation", DisplayName = "Show vector field")
-		bool IsShowVectors = true;
-
-	UPROPERTY(EditAnywhere, Category = "Spline calculation", DisplayName = "Show splines")
-		bool IsShowSplines = true;
-
 	float SizeMultipiler = 200;
 
 	//UPROPERTY(EditAnywhere, Category = "General calculation")
@@ -105,8 +99,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		void SetSizeMultipiler(float newSizeMultipiler);
 	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		void SetIsShowSplines(bool newIsShowSplines);
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
 		void SetCalculator(UCalculator* newCalculator);
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		void SetLyambda(float newLyambda);
@@ -123,10 +115,6 @@ public:
 		float GetEpsilon();
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		float GetSizeMultipiler();
-	UFUNCTION(BlueprintCallable, Category = "Vector calculation")
-		bool GetIsShowVectors();
-	UFUNCTION(BlueprintCallable, Category = "Spline calculation")
-		bool GetIsShowSplines();
 	UFUNCTION(BlueprintCallable, Category = "General calculation")
 		float GetLyambda();
 	UFUNCTION(BlueprintCallable, Category = "General calculation")

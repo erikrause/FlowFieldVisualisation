@@ -115,6 +115,18 @@ TArray<FVector> UMeshVectorField::_calculateVectorLocations(FIntVector resolutio
     return locations;
 }
 
+void UMeshVectorField::PostEditChangeProperty(FPropertyChangedEvent& e)
+{
+	Super::PostEditChangeProperty(e);
+
+	FName PropertyName = (e.Property != NULL) ? e.MemberProperty->GetFName() : NAME_None;
+
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UMeshVectorField, IsShowVectors))
+	{
+		SetVisibility(IsShowVectors, true);
+	}
+}
+
 void UMeshVectorField::SetResolution(FIntVector vectorFieldResolution)
 {
 	Resolution = vectorFieldResolution;

@@ -57,7 +57,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Visualisation")
 		float SplinesThickness = 0.025;
 	UPROPERTY(EditAnywhere, Category = "Visualisation")
-		int SplinePointsLimit = 500;
+		int SplinePointsLimit = 100;
 	UPROPERTY(EditAnywhere, Category = "Visualisation")
 		float SplineCalcStep = 0.1;
 	UPROPERTY(EditAnywhere, Category = "Visualisation", DisplayName = "Spline resolution (number of splines by axis)")
@@ -66,6 +66,8 @@ public:
 		float SplineParticlesSpawnDelay = 1;
 	UPROPERTY(EditAnywhere, Category = "Spline calculation")
 		float ParticleSize = 0.075;
+	UPROPERTY(EditAnywhere, Category = "Visualisation")
+		bool IsShowSplines = true;
 
 
 #pragma region Setters
@@ -113,4 +115,8 @@ protected:
 	float _particleSpawnTimeCounter;
 
 	float* _sizeMultipiler;
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& propertyChangedEvent) override;
+#endif
 };

@@ -124,13 +124,8 @@ void AFieldActor::SetSizeMultipiler(float sizeMultipiler)
 //
 //	if (IsShowVectors)
 //	{
-//		//_reCreateVecotrField();
+//		SplineField->
 //	}
-//	else
-//	{
-//		//VectorInstancedMesh->ClearInstances();
-//	}
-//	//VectorInstancedMesh->MarkRenderStateDirty();	// for debug
 //}
 
 void AFieldActor::SetLyambda(float lyambda)
@@ -162,19 +157,6 @@ void AFieldActor::SetUpperLimits(FVector newUpperLimits)
 	VectorField->Revisualize();
 }
 
-void AFieldActor::SetIsShowSplines(bool isShowSplines)
-{
-	IsShowSplines = isShowSplines;
-
-	if (IsShowSplines)
-	{
-		//UpdateSpline();
-	}
-	else
-	{
-		//SplineInstancedMesh->ClearInstances();
-	}
-}
 #pragma endregion
 
 #pragma region Getters for uproperties
@@ -207,11 +189,6 @@ float AFieldActor::GetSizeMultipiler()
 	return GetActorScale3D().X;
 }
 
-bool AFieldActor::GetIsShowVectors()
-{
-	return IsShowVectors;
-}
-
 float AFieldActor::GetLyambda()
 {
 	return Calculator->Lyambda;
@@ -225,11 +202,6 @@ FVector AFieldActor::GetLowerLimits()
 FVector AFieldActor::GetUpperLimits()
 {
 	return Calculator->UpperLimits;
-}
-
-bool AFieldActor::GetIsShowSplines()
-{
-	return IsShowSplines;
 }
 #pragma endregion
 
@@ -245,10 +217,6 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 	{
 		SplineField->UpdateSplines(0);
 		VectorField->Revisualize();
-	}
-	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, IsShowSplines))
-	{
-		SetIsShowSplines(IsShowSplines);
 	}
 	else if (PropertyName == GET_MEMBER_NAME_CHECKED(AFieldActor, SimulationTime))
 	{
