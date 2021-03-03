@@ -135,4 +135,5 @@ protected:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent & propertyChangedEvent) override; 
 #endif
 
+	void _initVisualisation();
 };

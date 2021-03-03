@@ -115,6 +115,7 @@ TArray<FVector> UMeshVectorField::_calculateVectorLocations(FIntVector resolutio
     return locations;
 }
 
+#if WITH_EDITOR
 void UMeshVectorField::PostEditChangeProperty(FPropertyChangedEvent& e)
 {
 	Super::PostEditChangeProperty(e);
@@ -126,6 +127,7 @@ void UMeshVectorField::PostEditChangeProperty(FPropertyChangedEvent& e)
 		SetVisibility(IsShowVectors, true);
 	}
 }
+#endif
 
 void UMeshVectorField::SetResolution(FIntVector vectorFieldResolution)
 {

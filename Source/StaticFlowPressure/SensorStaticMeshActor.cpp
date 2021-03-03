@@ -68,18 +68,7 @@ void AFieldActor::OnConstruction(const FTransform& transform)
 {
 	Super::OnConstruction(transform);
 
-	SetCalculator(NewObject<UPaperTest>());	// Костыль, т.к. калькулятор сбрасывается в NULL.
-	
-	SetSizeMultipiler(GetActorScale3D().X);
-	CubeCenter = (Calculator->UpperLimits + Calculator->LowerLimits) / 2;
-#if WITH_EDITOR
-	SetPivotOffset(CubeCenter);
-#endif
-
-	/*UCuboidFace* cuboidFace = CuboidSurface->GetFaceBy(FaceAxis::XY, FacePosition::Front);
-	cuboidFace->IsActivated = true;*/
-	SplineField->UpdateSplines(0, true);
-	VectorField->Revisualize();
+	_initVisualisation();
 }
 
 #pragma region Setters for uproperties
@@ -229,9 +218,27 @@ void AFieldActor::PostEditChangeProperty(FPropertyChangedEvent& e)	// TODO: сдел
 }
 #endif
 
+void AFieldActor::_initVisualisation()
+{
+	SetCalculator(NewObject<UPaperTest>());	// Костыль, т.к. калькулятор сбрасывается в NULL.
+
+	SetSizeMultipiler(GetActorScale3D().X);
+	CubeCenter = (Calculator->UpperLimits + Calculator->LowerLimits) / 2;
+#if WITH_EDITOR
+	SetPivotOffset(CubeCenter);
+#endif
+
+	/*UCuboidFace* cuboidFace = CuboidSurface->GetFaceBy(FaceAxis::XY, FacePosition::Front);
+	cuboidFace->IsActivated = true;*/
+	SplineField->UpdateSplines(0, true);
+	VectorField->Revisualize();
+}
+
 void AFieldActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	_initVisualisation();
 
 	SplineField->FillSplineWithParticles(1);
 }

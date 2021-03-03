@@ -85,7 +85,7 @@ void USplineField::UpdateSplines(float deltaTime, bool isUpdateStartPositions)
 			TArray<FVector> locations = area->GetSplinesStartLocations(Resolution);
 			for (FVector location : locations)
 			{
-				USpline* spline = USpline::Construct(location, Calculator, _sizeMultipiler);
+				USpline* spline = USpline::Construct(this, location, Calculator, _sizeMultipiler);
 				spline->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
 				spline->ClearSplinePoints();		// Удаляет дефолтные точки.
 				//splineComponent->bInputSplinePointsToConstructionScript = true;
@@ -335,6 +335,7 @@ void USplineField::_addSplineCalculatorAsset(FString name)
 	_spllineCalculatorsAssetsGCDuplicate.Add(name, splineMaterialAsset.Object);
 }
 
+#if WITH_EDITOR
 void USplineField::PostEditChangeProperty(FPropertyChangedEvent& e)
 {
 	Super::PostEditChangeProperty(e);
@@ -346,3 +347,4 @@ void USplineField::PostEditChangeProperty(FPropertyChangedEvent& e)
 		SetVisibility(IsShowSplines, true);
 	}
 }
+#endif

@@ -3,9 +3,9 @@ PRAGMA_DISABLE_OPTIMIZATION
 
 #include "Spline.h"
 
-USpline* USpline::Construct(FVector startPoint, UCalculator const* const* calculator, float* sizeMultipiler)
+USpline* USpline::Construct(UObject* outer, FVector startPoint, UCalculator const* const* calculator, float* sizeMultipiler)
 {
-    USpline* spline = NewObject<USpline>();
+    USpline* spline = NewObject<USpline>(outer);
     spline->Init(startPoint, calculator, sizeMultipiler);
     return spline;
 }
