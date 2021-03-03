@@ -85,7 +85,7 @@ void USplineField::UpdateSplines(float deltaTime, bool isUpdateStartPositions)
 			TArray<FVector> locations = area->GetSplinesStartLocations(Resolution);
 			for (FVector location : locations)
 			{
-				USpline* spline = USpline::Construct(location, Calculator, _sizeMultipiler);
+				USpline* spline = USpline::Construct(this, location, Calculator, _sizeMultipiler);
 				spline->AttachToComponent(this, FAttachmentTransformRules::KeepRelativeTransform);
 				spline->ClearSplinePoints();		// Удаляет дефолтные точки.
 				//splineComponent->bInputSplinePointsToConstructionScript = true;
@@ -102,6 +102,8 @@ void USplineField::UpdateSplines(float deltaTime, bool isUpdateStartPositions)
 #pragma region Spawn particles
 
 	_particleSpawnTimeCounter += deltaTime;
+
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::SanitizeFloat(_particleSpawnTimeCounter));
 
 	// Обработка изменения времени (play и перемотка вперед).
 	while (_particleSpawnTimeCounter > SplineParticlesSpawnDelay)
@@ -218,6 +220,10 @@ void USplineField::SelectMaterial(FString name)
 
 	SplineMaterial = UMaterialInstanceDynamic::Create(SpllineCalculatorsAssets[name], this);
 	SplineInstancedMesh->SetMaterial(0, SplineMaterial);
+
+	SplineMaterial->SetScalarParameterValue(TEXT("time"), 0);
+	SplineMaterial->SetScalarParameterValue(TEXT("epsilon"), (*Calculator)->Epsilon);
+	SplineMaterial->SetScalarParameterValue(TEXT("scale"), *_sizeMultipiler);
 }
 
 void USplineField::SetSplinePointsLimit(int splinePointsLimit)
@@ -328,3 +334,17 @@ void USplineField::_addSplineCalculatorAsset(FString name)
 	SpllineCalculatorsAssets.Add(name, splineMaterialAsset.Object);
 	_spllineCalculatorsAssetsGCDuplicate.Add(name, splineMaterialAsset.Object);
 }
+
+#if WITH_EDITOR
+void USplineField::PostEditChangeProperty(FPropertyChangedEvent& e)
+{
+	Super::PostEditChangeProperty(e);
+
+	FName PropertyName = (e.Property != NULL) ? e.MemberProperty->GetFName() : NAME_None;
+
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(USplineField, IsShowSplines))
+	{
+		SetVisibility(IsShowSplines, true);
+	}
+}
+#endif

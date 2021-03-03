@@ -3,9 +3,9 @@ PRAGMA_DISABLE_OPTIMIZATION
 
 #include "Spline.h"
 
-USpline* USpline::Construct(FVector startPoint, UCalculator const* const* calculator, float* sizeMultipiler)
+USpline* USpline::Construct(UObject* outer, FVector startPoint, UCalculator const* const* calculator, float* sizeMultipiler)
 {
-    USpline* spline = NewObject<USpline>();
+    USpline* spline = NewObject<USpline>(outer);
     spline->Init(startPoint, calculator, sizeMultipiler);
     return spline;
 }
@@ -82,9 +82,9 @@ void USpline::UpdateParticles(float deltaTime)
 		FVector offset = GetRelativeLocation();
 		FVector particlePosition = GetLocationAtDistanceAlongSpline(particle->Distance, ESplineCoordinateSpace::Local) + offset;
 		FVector particleVelocity = (*Calculator)->Calc_vel(particlePosition);
-		particle->Distance += particleVelocity.Size() * deltaTime;	// TODO: проверить значение, возвращаеме Size().
+		particle->Distance += particleVelocity.Size() * deltaTime;
 
-		if ((particle->Distance > GetSplineLength()) || (particle->Distance < 0))
+		if ((particle->Distance > GetSplineLength()) || (particle->Distance < 0))		// TODO: добавить проверку на перекрытие частиц.
 		{
 			outsideParticles.Add(particle);
 		}

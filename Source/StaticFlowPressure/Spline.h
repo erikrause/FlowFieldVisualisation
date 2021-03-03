@@ -18,7 +18,7 @@ class STATICFLOWPRESSURE_API USpline : public USplineComponent
 	
 public:
 
-	static USpline* Construct(FVector startPoint, UCalculator const* const* calculator, float* sizeMultipiler);
+	static USpline* Construct(UObject* outer, FVector startPoint, UCalculator const* const* calculator, float* sizeMultipiler);
 	void Init(FVector startPoint, UCalculator const* const* calculator, float* sizeMultipiler);
 
 	FVector StartPoint;

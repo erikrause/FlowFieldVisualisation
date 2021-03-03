@@ -16,7 +16,7 @@ class STATICFLOWPRESSURE_API UMeshVectorField : public USceneComponent
 public:	
 	UMeshVectorField();
 
-	void Init(UCalculator const* const* calculator);
+	void Init(UCalculator const* const* calculator, float* sizeMultipiler);
 
 	UCalculator const* const* Calculator;
 
@@ -28,16 +28,16 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Visualisation", DisplayName = "Vector field resolution (number of sensors by axis)")
 		FIntVector Resolution = FIntVector(4, 4, 4);
-
 	UPROPERTY(EditAnywhere, Category = "Visualisation", DisplayName = "Vectors size (multipiler)")
 		float VectorMeshRadiusMultipiler = 0.5;
+	UPROPERTY(EditAnywhere, Category = "Visualisation")
+		bool IsShowVectors = true;
 
 
 #pragma region Setters
 
 	UFUNCTION(BlueprintCallable, Category = "Visualisation")
 		void SetResolution(FIntVector newVectorFieldResolution);
-
 	UFUNCTION(BlueprintCallable, Category = "Visualisation")
 		void SetVectorMeshRadiusMultipiler(float newVectorMeshRadiusMultipiler);
 
@@ -56,4 +56,9 @@ protected:
 
 	TArray<FVector> _calculateVectorLocations(FIntVector resolution, bool isApplyBias = true) const;
 
+	float* _sizeMultipiler;
+
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& propertyChangedEvent) override;
+#endif
 };
